@@ -27,6 +27,9 @@ class Product
     #[ORM\Column(type: 'integer')]
     private int $stock;
 
+    #[ORM\Column(length: 255)]
+    private string $imageUrl;
+
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: false)]
     private Category $category;
@@ -37,6 +40,7 @@ class Product
         string $description,
         int $priceInCents,
         int $stock,
+        string $imageUrl,
         Category $category,
     ) {
         $this->name = $name;
@@ -44,6 +48,7 @@ class Product
         $this->description = $description;
         $this->priceInCents = $priceInCents;
         $this->stock = $stock;
+        $this->imageUrl = $imageUrl;
         $this->category = $category;
     }
 
@@ -100,6 +105,16 @@ class Product
     public function setStock(int $stock): void
     {
         $this->stock = $stock;
+    }
+
+    public function getImageUrl(): string
+    {
+        return $this->imageUrl;
+    }
+
+    public function setImageUrl(string $imageUrl): void
+    {
+        $this->imageUrl = $imageUrl;
     }
 
     public function getCategory(): Category

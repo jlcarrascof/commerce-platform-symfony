@@ -16,6 +16,12 @@ const formattedPrice = new Intl.NumberFormat('en-US', {
 
 <template>
   <BaseCard class="product-card">
+    <img
+      class="product-card__image"
+      :src="product.imageUrl"
+      :alt="product.name"
+      loading="lazy"
+    />
     <BaseBadge tone="neutral">{{ product.category.name }}</BaseBadge>
     <h3 class="product-card__name">{{ product.name }}</h3>
     <p class="product-card__description">{{ product.description }}</p>
@@ -31,6 +37,14 @@ const formattedPrice = new Intl.NumberFormat('en-US', {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+.product-card__image {
+  width: calc(100% + 2 * var(--space-lg));
+  margin: calc(-1 * var(--space-lg)) calc(-1 * var(--space-lg)) 0;
+  height: 160px;
+  object-fit: cover;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .product-card__name {

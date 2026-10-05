@@ -60,6 +60,7 @@ class CategoryProductFixtures extends Fixture
                 $description,
                 $price,
                 $stock,
+                \sprintf('https://picsum.photos/seed/%s/400/300', $slug),
                 $categories[$categoryReference],
             );
             $manager->persist($product);

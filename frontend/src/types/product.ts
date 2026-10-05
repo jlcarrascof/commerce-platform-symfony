@@ -5,6 +5,7 @@ export interface Product {
   description: string
   priceInCents: number
   stock: number
+  imageUrl: string
   category: {
     id: number
     name: string
