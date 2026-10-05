@@ -14,6 +14,7 @@ enum OrderStatus: string
 }
 
 #[ORM\Entity]
+#[ORM\Table(name: '`order`')]
 class Order
 {
     #[ORM\Id]
