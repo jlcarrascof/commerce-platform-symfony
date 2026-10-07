@@ -129,7 +129,6 @@ async function placeOrder(): Promise<void> {
 }
 
 .checkout-table th {
-  text-align: left;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -159,6 +158,7 @@ async function placeOrder(): Promise<void> {
 }
 
 .checkout-table__description {
+  text-align: left;
   font-weight: 500;
   color: var(--color-text-heading);
 }
