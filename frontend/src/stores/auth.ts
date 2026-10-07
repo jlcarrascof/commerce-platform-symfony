@@ -8,6 +8,18 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => state.token !== null,
+
+    userEmail: (state): string | null => {
+      if (!state.token) {
+        return null
+      }
+      try {
+        const payload = JSON.parse(atob(state.token.split('.')[1]))
+        return payload.username ?? null
+      } catch {
+        return null
+      }
+    },
   },
 
   actions: {
