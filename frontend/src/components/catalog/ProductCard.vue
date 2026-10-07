@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Product } from '../../types/product'
+import { useCartStore } from '../../stores/cart'
 import BaseCard from '../base/BaseCard.vue'
 import BaseBadge from '../base/BaseBadge.vue'
 import BaseButton from '../base/BaseButton.vue'
@@ -8,10 +10,21 @@ const props = defineProps<{
   product: Product
 }>()
 
+const cartStore = useCartStore()
+const justAdded = ref(false)
+
 const formattedPrice = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 }).format(props.product.priceInCents / 100)
+
+function handleAddToCart(): void {
+  cartStore.addItem(props.product)
+  justAdded.value = true
+  setTimeout(() => {
+    justAdded.value = false
+  }, 1200)
+}
 </script>
 
 <template>
@@ -27,7 +40,7 @@ const formattedPrice = new Intl.NumberFormat('en-US', {
     <p class="product-card__description">{{ product.description }}</p>
     <div class="product-card__footer">
       <span class="product-card__price">{{ formattedPrice }}</span>
-      <BaseButton>Add to cart</BaseButton>
+      <BaseButton @click="handleAddToCart">{{ justAdded ? 'Added ✓' : 'Add to cart' }}</BaseButton>
     </div>
   </BaseCard>
 </template>
