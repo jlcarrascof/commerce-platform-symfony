@@ -66,7 +66,7 @@ async function handleSubmit(): Promise<void> {
 
 <style scoped>
 .login-view {
-  min-height: 100%;
+  flex: 1;
   display: grid;
   grid-template-columns: 1fr;
 }
