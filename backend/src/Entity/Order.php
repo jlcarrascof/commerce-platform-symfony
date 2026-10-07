@@ -32,6 +32,9 @@ class Order
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(length: 100, nullable: true, unique: true)]
+    private ?string $idempotencyKey = null;
+
     /** @var Collection<int, OrderItem> */
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist'], orphanRemoval: true)]
     private Collection $items;
@@ -67,6 +70,16 @@ class Order
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getIdempotencyKey(): ?string
+    {
+        return $this->idempotencyKey;
+    }
+
+    public function setIdempotencyKey(?string $idempotencyKey): void
+    {
+        $this->idempotencyKey = $idempotencyKey;
     }
 
     /** @return Collection<int, OrderItem> */

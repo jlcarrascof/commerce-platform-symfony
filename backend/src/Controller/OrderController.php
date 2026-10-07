@@ -29,6 +29,16 @@ class OrderController
             return new JsonResponse(['error' => 'Only customers can place orders.'], 422);
         }
 
+        $idempotencyKey = $request->headers->get('Idempotency-Key');
+
+        if (null !== $idempotencyKey) {
+            $existingOrder = $this->entityManager->getRepository(Order::class)->findOneBy(['idempotencyKey' => $idempotencyKey]);
+
+            if (null !== $existingOrder) {
+                return new JsonResponse($this->serialize($existingOrder), 200);
+            }
+        }
+
         $data = json_decode($request->getContent(), true) ?? [];
         $items = $data['items'] ?? [];
 
@@ -37,6 +47,7 @@ class OrderController
         }
 
         $order = new Order($customer);
+        $order->setIdempotencyKey($idempotencyKey);
 
         foreach ($items as $index => $item) {
             $productId = $item['productId'] ?? null;
