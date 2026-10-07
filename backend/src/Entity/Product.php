@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 class Product
@@ -13,21 +14,31 @@ class Product
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 150)]
     private string $name;
 
     #[ORM\Column(length: 160, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 160)]
+    #[Assert\Regex(pattern: '/^[a-z0-9]+(-[a-z0-9]+)*$/', message: 'Slug must be lowercase, alphanumeric and dash-separated.')]
     private string $slug;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank]
     private string $description;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\PositiveOrZero]
     private int $priceInCents;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\PositiveOrZero]
     private int $stock;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Url]
     private string $imageUrl;
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'products')]
