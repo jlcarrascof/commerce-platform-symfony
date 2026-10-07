@@ -33,6 +33,7 @@ onMounted(async () => {
 
 <style scoped>
 .catalog-page {
+  width: 100%;
   padding: var(--space-xl);
   max-width: 1200px;
   margin: 0 auto;

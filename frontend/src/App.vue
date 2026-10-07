@@ -22,5 +22,8 @@ import AppFooter from './components/layout/AppFooter.vue'
 
 .app-shell__content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 </style>
