@@ -55,7 +55,9 @@ async function handleSubmit(): Promise<void> {
 .login-view {
   display: flex;
   justify-content: center;
-  padding-top: var(--space-xl);
+  align-items: center;
+  min-height: 100%;
+  padding: var(--space-xl) var(--space-md);
 }
 
 .login-view__card {
@@ -65,6 +67,7 @@ async function handleSubmit(): Promise<void> {
 
 .login-view__title {
   margin-top: 0;
+  text-align: center;
 }
 
 .login-view__form {
