@@ -1,12 +1,21 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { useCartStore } from '../../stores/cart'
+import { useAuthStore } from '../../stores/auth'
 
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const router = useRouter()
 
 const navLinks = [
   { label: 'Catalog', to: '/' },
   { label: 'Admin', to: '/admin' },
 ]
+
+function handleLogout(): void {
+  authStore.logout()
+  router.push('/')
+}
 </script>
 
 <template>
@@ -20,6 +29,12 @@ const navLinks = [
         Cart
         <span v-if="cartStore.totalItems > 0" class="app-header__cart-badge">{{ cartStore.totalItems }}</span>
       </RouterLink>
+
+      <span v-if="authStore.isAuthenticated" class="app-header__session">
+        <span class="app-header__session-email">{{ authStore.userEmail }}</span>
+        <button type="button" class="app-header__logout" @click="handleLogout">Log out</button>
+      </span>
+      <RouterLink v-else to="/login">Log in</RouterLink>
     </nav>
   </header>
 </template>
@@ -73,5 +88,26 @@ const navLinks = [
   color: var(--color-neutral-0);
   font-size: 11px;
   font-weight: 700;
+}
+
+.app-header__session {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.app-header__session-email {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.app-header__logout {
+  background: none;
+  border: none;
+  color: var(--color-accent-600);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
 }
 </style>
