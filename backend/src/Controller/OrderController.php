@@ -4,9 +4,12 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Entity\Order;
+use App\Entity\OrderItem;
+use App\Entity\Product;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -15,6 +18,49 @@ class OrderController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
     ) {
+    }
+
+    #[Route('/api/orders', name: 'order_create', methods: ['POST'])]
+    public function create(Request $request, #[CurrentUser] User $user): JsonResponse
+    {
+        $customer = $this->findCustomerFor($user);
+
+        if (null === $customer) {
+            return new JsonResponse(['error' => 'Only customers can place orders.'], 422);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+        $items = $data['items'] ?? [];
+
+        if (!is_array($items) || [] === $items) {
+            return new JsonResponse(['errors' => [['field' => 'items', 'message' => 'At least one item is required.']]], 422);
+        }
+
+        $order = new Order($customer);
+
+        foreach ($items as $index => $item) {
+            $productId = $item['productId'] ?? null;
+            $quantity = $item['quantity'] ?? null;
+
+            $product = is_int($productId) || is_string($productId)
+                ? $this->entityManager->getRepository(Product::class)->find($productId)
+                : null;
+
+            if (null === $product) {
+                return new JsonResponse(['errors' => [['field' => "items[$index].productId", 'message' => 'Product not found.']]], 422);
+            }
+
+            if (!is_int($quantity) || $quantity < 1) {
+                return new JsonResponse(['errors' => [['field' => "items[$index].quantity", 'message' => 'Quantity must be a positive integer.']]], 422);
+            }
+
+            $order->addItem(new OrderItem($order, $product, $quantity, $product->getPriceInCents()));
+        }
+
+        $this->entityManager->persist($order);
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($order), 201);
     }
 
     #[Route('/api/orders', name: 'order_list', methods: ['GET'])]
