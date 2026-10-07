@@ -4,6 +4,7 @@ withDefaults(
     modelValue?: string
     type?: string
     required?: boolean
+    placeholder?: string
   }>(),
   { type: 'text' },
 )
@@ -19,6 +20,7 @@ defineEmits<{
     :type="type"
     :value="modelValue"
     :required="required"
+    :placeholder="placeholder"
     @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
   />
 </template>
