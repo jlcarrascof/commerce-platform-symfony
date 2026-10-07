@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 class OrderItem
@@ -21,9 +22,11 @@ class OrderItem
     private Product $product;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\Positive]
     private int $quantity;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\PositiveOrZero]
     private int $unitPriceInCents;
 
     public function __construct(Order $order, Product $product, int $quantity, int $unitPriceInCents)
