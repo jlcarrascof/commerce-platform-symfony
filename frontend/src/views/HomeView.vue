@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { mockProducts } from '../mocks/products'
+import { onMounted, ref } from 'vue'
+import apiClient from '../api/client'
+import type { Product } from '../types/product'
 import ProductGrid from '../components/catalog/ProductGrid.vue'
+
+const products = ref<Product[]>([])
+
+onMounted(async () => {
+  const response = await apiClient.get<Product[]>('/products')
+  products.value = response.data
+})
 </script>
 
 <template>
   <section class="catalog-page">
     <h1>Catalog</h1>
-    <ProductGrid :products="mockProducts" />
+    <ProductGrid :products="products" />
   </section>
 </template>
 
