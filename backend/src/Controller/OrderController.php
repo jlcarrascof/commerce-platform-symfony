@@ -5,18 +5,22 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\Order;
 use App\Entity\OrderItem;
+use App\Entity\OrderStatus;
 use App\Entity\Product;
 use App\Entity\User;
+use App\Security\Voter\OrderVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class OrderController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly AuthorizationCheckerInterface $authorizationChecker,
     ) {
     }
 
@@ -102,6 +106,73 @@ class OrderController
         if (!$isAdmin && !$isOwner) {
             return new JsonResponse(['error' => 'Access denied.'], 403);
         }
+
+        return new JsonResponse($this->serialize($order));
+    }
+
+    #[Route('/api/orders/{id}/confirm', name: 'order_confirm', methods: ['POST'])]
+    public function confirm(int $id): JsonResponse
+    {
+        $order = $this->entityManager->getRepository(Order::class)->find($id);
+
+        if (null === $order) {
+            return new JsonResponse(['error' => 'Order not found.'], 404);
+        }
+
+        if (!$this->authorizationChecker->isGranted(OrderVoter::CONFIRM, $order)) {
+            return new JsonResponse(['error' => 'Access denied.'], 403);
+        }
+
+        if (OrderStatus::Pending !== $order->getStatus()) {
+            return new JsonResponse(['error' => 'Only pending orders can be confirmed.'], 422);
+        }
+
+        foreach ($order->getItems() as $item) {
+            $product = $item->getProduct();
+            if ($product->getStock() < $item->getQuantity()) {
+                return new JsonResponse([
+                    'error' => sprintf('Insufficient stock for "%s" (requested %d, available %d).', $product->getName(), $item->getQuantity(), $product->getStock()),
+                ], 422);
+            }
+        }
+
+        foreach ($order->getItems() as $item) {
+            $product = $item->getProduct();
+            $product->setStock($product->getStock() - $item->getQuantity());
+        }
+
+        $order->setStatus(OrderStatus::Confirmed);
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($order));
+    }
+
+    #[Route('/api/orders/{id}/cancel', name: 'order_cancel', methods: ['POST'])]
+    public function cancel(int $id): JsonResponse
+    {
+        $order = $this->entityManager->getRepository(Order::class)->find($id);
+
+        if (null === $order) {
+            return new JsonResponse(['error' => 'Order not found.'], 404);
+        }
+
+        if (!$this->authorizationChecker->isGranted(OrderVoter::CANCEL, $order)) {
+            return new JsonResponse(['error' => 'Access denied.'], 403);
+        }
+
+        if (OrderStatus::Cancelled === $order->getStatus()) {
+            return new JsonResponse(['error' => 'Order is already cancelled.'], 422);
+        }
+
+        if (OrderStatus::Confirmed === $order->getStatus()) {
+            foreach ($order->getItems() as $item) {
+                $product = $item->getProduct();
+                $product->setStock($product->getStock() + $item->getQuantity());
+            }
+        }
+
+        $order->setStatus(OrderStatus::Cancelled);
+        $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($order));
     }
