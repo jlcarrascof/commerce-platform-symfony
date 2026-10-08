@@ -1,6 +1,19 @@
 import { defineStore } from 'pinia'
 import apiClient, { AUTH_TOKEN_STORAGE_KEY } from '../api/client'
 
+interface JwtPayload {
+  username?: string
+  roles?: string[]
+}
+
+function decodeToken(token: string): JwtPayload | null {
+  try {
+    return JSON.parse(atob(token.split('.')[1]))
+  } catch {
+    return null
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) as string | null,
@@ -13,12 +26,14 @@ export const useAuthStore = defineStore('auth', {
       if (!state.token) {
         return null
       }
-      try {
-        const payload = JSON.parse(atob(state.token.split('.')[1]))
-        return payload.username ?? null
-      } catch {
-        return null
+      return decodeToken(state.token)?.username ?? null
+    },
+
+    isAdmin: (state): boolean => {
+      if (!state.token) {
+        return false
       }
+      return decodeToken(state.token)?.roles?.includes('ROLE_ADMIN') ?? false
     },
   },
 

@@ -33,14 +33,20 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: HomeView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
 })
 
 router.beforeEach((to) => {
-  if (to.meta.requiresAuth && !useAuthStore().isAuthenticated) {
+  const authStore = useAuthStore()
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login' }
+  }
+
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { name: 'home' }
   }
 })
 
