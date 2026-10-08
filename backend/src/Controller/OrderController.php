@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AuditLog;
 use App\Entity\Customer;
 use App\Entity\Order;
 use App\Entity\OrderItem;
@@ -138,7 +139,7 @@ class OrderController
     }
 
     #[Route('/api/orders/{id}/confirm', name: 'order_confirm', methods: ['POST'])]
-    public function confirm(int $id): JsonResponse
+    public function confirm(int $id, #[CurrentUser] User $user): JsonResponse
     {
         $order = $this->entityManager->getRepository(Order::class)->find($id);
 
@@ -169,13 +170,14 @@ class OrderController
         }
 
         $order->setStatus(OrderStatus::Confirmed);
+        $this->entityManager->persist(new AuditLog($order, $user, 'confirmed'));
         $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($order));
     }
 
     #[Route('/api/orders/{id}/cancel', name: 'order_cancel', methods: ['POST'])]
-    public function cancel(int $id): JsonResponse
+    public function cancel(int $id, #[CurrentUser] User $user): JsonResponse
     {
         $order = $this->entityManager->getRepository(Order::class)->find($id);
 
@@ -199,6 +201,7 @@ class OrderController
         }
 
         $order->setStatus(OrderStatus::Cancelled);
+        $this->entityManager->persist(new AuditLog($order, $user, 'cancelled'));
         $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($order));
