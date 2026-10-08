@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
+import AdminOrdersView from '../views/AdminOrdersView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -32,7 +33,7 @@ const router = createRouter({
     {
       path: '/admin',
       name: 'admin',
-      component: HomeView,
+      component: AdminOrdersView,
       meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
