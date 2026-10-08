@@ -20,11 +20,40 @@ class ProductController
     }
 
     #[Route('/api/products', name: 'product_list', methods: ['GET'])]
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
-        $products = $this->entityManager->getRepository(Product::class)->findAll();
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $categorySlug = $request->query->get('category');
+        $sort = (string) $request->query->get('sort', 'name');
 
-        return new JsonResponse(array_map($this->serialize(...), $products));
+        $qb = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
+            ->join('p.category', 'c');
+
+        if (null !== $categorySlug && '' !== $categorySlug) {
+            $qb->andWhere('c.slug = :categorySlug')->setParameter('categorySlug', $categorySlug);
+        }
+
+        $sortFields = [
+            'name' => 'p.name ASC',
+            '-name' => 'p.name DESC',
+            'price' => 'p.priceInCents ASC',
+            '-price' => 'p.priceInCents DESC',
+        ];
+        $qb->orderBy(...explode(' ', $sortFields[$sort] ?? $sortFields['name']));
+
+        $totalCount = (clone $qb)->select('COUNT(p.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+        $products = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        $response = new JsonResponse(array_map($this->serialize(...), $products));
+        $response->headers->set('X-Total-Count', (string) $totalCount);
+
+        return $response;
     }
 
     #[Route('/api/products', name: 'product_create', methods: ['POST'])]
