@@ -79,16 +79,43 @@ class OrderController
     }
 
     #[Route('/api/orders', name: 'order_list', methods: ['GET'])]
-    public function list(#[CurrentUser] User $user): JsonResponse
+    public function list(Request $request, #[CurrentUser] User $user): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            $orders = $this->entityManager->getRepository(Order::class)->findAll();
-        } else {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $statusParam = $request->query->get('status');
+
+        $qb = $this->entityManager->getRepository(Order::class)->createQueryBuilder('o')
+            ->orderBy('o.createdAt', 'DESC');
+
+        if (!in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             $customer = $this->findCustomerFor($user);
-            $orders = $customer?->getOrders()->toArray() ?? [];
+            if (null === $customer) {
+                return new JsonResponse([]);
+            }
+            $qb->andWhere('o.customer = :customer')->setParameter('customer', $customer);
         }
 
-        return new JsonResponse(array_map($this->serialize(...), $orders));
+        if (null !== $statusParam && '' !== $statusParam) {
+            $status = OrderStatus::tryFrom($statusParam);
+            if (null === $status) {
+                return new JsonResponse(['errors' => [['field' => 'status', 'message' => 'Invalid status value.']]], 422);
+            }
+            $qb->andWhere('o.status = :status')->setParameter('status', $status);
+        }
+
+        $totalCount = (clone $qb)->select('COUNT(o.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+        $orders = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        $response = new JsonResponse(array_map($this->serialize(...), $orders));
+        $response->headers->set('X-Total-Count', (string) $totalCount);
+
+        return $response;
     }
 
     #[Route('/api/orders/{id}', name: 'order_show', methods: ['GET'])]
