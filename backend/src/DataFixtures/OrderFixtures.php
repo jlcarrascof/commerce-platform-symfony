@@ -20,6 +20,19 @@ class OrderFixtures extends Fixture implements DependentFixtureInterface
         $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_2, 'mechanical-keyboard', 1, OrderStatus::Confirmed);
         $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_3, 'running-shoes', 1, OrderStatus::Cancelled);
 
+        // Extra orders so the admin dashboard pagination has more than one page to show.
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_1, '27-inch-monitor', 1, OrderStatus::Pending);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_2, 'usb-c-hub', 2, OrderStatus::Confirmed);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_3, 'notebook-set', 3, OrderStatus::Pending);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_1, 'electric-kettle', 1, OrderStatus::Confirmed);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_2, 'desk-organizer', 2, OrderStatus::Pending);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_3, 'insulated-water-bottle', 1, OrderStatus::Cancelled);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_1, 'knife-set', 1, OrderStatus::Pending);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_2, 'throw-blanket', 2, OrderStatus::Confirmed);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_3, 'adjustable-dumbbells', 1, OrderStatus::Pending);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_1, 'noise-cancelling-headphones', 1, OrderStatus::Confirmed);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_2, 'building-blocks-set', 2, OrderStatus::Pending);
+
         $manager->flush();
     }
 

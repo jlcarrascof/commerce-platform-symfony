@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
+import AdminOrdersView from '../views/AdminOrdersView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -32,15 +33,21 @@ const router = createRouter({
     {
       path: '/admin',
       name: 'admin',
-      component: HomeView,
-      meta: { requiresAuth: true },
+      component: AdminOrdersView,
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
   ],
 })
 
 router.beforeEach((to) => {
-  if (to.meta.requiresAuth && !useAuthStore().isAuthenticated) {
+  const authStore = useAuthStore()
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login' }
+  }
+
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { name: 'home' }
   }
 })
 

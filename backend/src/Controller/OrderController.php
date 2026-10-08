@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AuditLog;
 use App\Entity\Customer;
 use App\Entity\Order;
 use App\Entity\OrderItem;
@@ -79,16 +80,43 @@ class OrderController
     }
 
     #[Route('/api/orders', name: 'order_list', methods: ['GET'])]
-    public function list(#[CurrentUser] User $user): JsonResponse
+    public function list(Request $request, #[CurrentUser] User $user): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            $orders = $this->entityManager->getRepository(Order::class)->findAll();
-        } else {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $statusParam = $request->query->get('status');
+
+        $qb = $this->entityManager->getRepository(Order::class)->createQueryBuilder('o')
+            ->orderBy('o.createdAt', 'DESC');
+
+        if (!in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             $customer = $this->findCustomerFor($user);
-            $orders = $customer?->getOrders()->toArray() ?? [];
+            if (null === $customer) {
+                return new JsonResponse([]);
+            }
+            $qb->andWhere('o.customer = :customer')->setParameter('customer', $customer);
         }
 
-        return new JsonResponse(array_map($this->serialize(...), $orders));
+        if (null !== $statusParam && '' !== $statusParam) {
+            $status = OrderStatus::tryFrom($statusParam);
+            if (null === $status) {
+                return new JsonResponse(['errors' => [['field' => 'status', 'message' => 'Invalid status value.']]], 422);
+            }
+            $qb->andWhere('o.status = :status')->setParameter('status', $status);
+        }
+
+        $totalCount = (clone $qb)->select('COUNT(o.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+        $orders = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        $response = new JsonResponse(array_map($this->serialize(...), $orders));
+        $response->headers->set('X-Total-Count', (string) $totalCount);
+
+        return $response;
     }
 
     #[Route('/api/orders/{id}', name: 'order_show', methods: ['GET'])]
@@ -110,8 +138,40 @@ class OrderController
         return new JsonResponse($this->serialize($order));
     }
 
+    #[Route('/api/orders/{id}/audit-log', name: 'order_audit_log', methods: ['GET'])]
+    public function auditLog(int $id, #[CurrentUser] User $user): JsonResponse
+    {
+        $order = $this->entityManager->getRepository(Order::class)->find($id);
+
+        if (null === $order) {
+            return new JsonResponse(['error' => 'Order not found.'], 404);
+        }
+
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
+        $isOwner = $order->getCustomer()->getUser()->getId() === $user->getId();
+
+        if (!$isAdmin && !$isOwner) {
+            return new JsonResponse(['error' => 'Access denied.'], 403);
+        }
+
+        $entries = $this->entityManager->getRepository(AuditLog::class)->findBy(
+            ['order' => $order],
+            ['createdAt' => 'ASC'],
+        );
+
+        return new JsonResponse(array_map(
+            static fn (AuditLog $entry) => [
+                'id' => $entry->getId(),
+                'action' => $entry->getAction(),
+                'userEmail' => $entry->getUser()->getEmail(),
+                'createdAt' => $entry->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            ],
+            $entries,
+        ));
+    }
+
     #[Route('/api/orders/{id}/confirm', name: 'order_confirm', methods: ['POST'])]
-    public function confirm(int $id): JsonResponse
+    public function confirm(int $id, #[CurrentUser] User $user): JsonResponse
     {
         $order = $this->entityManager->getRepository(Order::class)->find($id);
 
@@ -142,13 +202,14 @@ class OrderController
         }
 
         $order->setStatus(OrderStatus::Confirmed);
+        $this->entityManager->persist(new AuditLog($order, $user, 'confirmed'));
         $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($order));
     }
 
     #[Route('/api/orders/{id}/cancel', name: 'order_cancel', methods: ['POST'])]
-    public function cancel(int $id): JsonResponse
+    public function cancel(int $id, #[CurrentUser] User $user): JsonResponse
     {
         $order = $this->entityManager->getRepository(Order::class)->find($id);
 
@@ -172,6 +233,7 @@ class OrderController
         }
 
         $order->setStatus(OrderStatus::Cancelled);
+        $this->entityManager->persist(new AuditLog($order, $user, 'cancelled'));
         $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($order));
