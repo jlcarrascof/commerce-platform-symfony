@@ -12,7 +12,7 @@ const error = ref<string | null>(null)
 const statusFilter = ref<OrderStatus | ''>('')
 
 const page = ref(1)
-const limit = 10
+const limit = 12
 const totalCount = ref(0)
 
 const actionErrors = reactive<Record<number, string>>({})
