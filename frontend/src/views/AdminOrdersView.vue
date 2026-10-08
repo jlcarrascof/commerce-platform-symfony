@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import apiClient from '../api/client'
 import type { Order, OrderStatus } from '../types/order'
+import type { AuditLogEntry } from '../types/auditLog'
 import BaseCard from '../components/base/BaseCard.vue'
 import BaseBadge from '../components/base/BaseBadge.vue'
 
@@ -16,6 +17,10 @@ const totalCount = ref(0)
 
 const actionErrors = reactive<Record<number, string>>({})
 const pendingActions = reactive<Record<number, boolean>>({})
+
+const expandedOrderId = ref<number | null>(null)
+const auditLogs = reactive<Record<number, AuditLogEntry[]>>({})
+const auditLoading = reactive<Record<number, boolean>>({})
 
 const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -85,6 +90,29 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
     pendingActions[order.id] = false
   }
 }
+
+async function toggleHistory(order: Order): Promise<void> {
+  if (expandedOrderId.value === order.id) {
+    expandedOrderId.value = null
+    return
+  }
+
+  expandedOrderId.value = order.id
+
+  if (auditLogs[order.id]) {
+    return
+  }
+
+  auditLoading[order.id] = true
+  try {
+    const response = await apiClient.get<AuditLogEntry[]>(`/orders/${order.id}/audit-log`)
+    auditLogs[order.id] = response.data
+  } catch {
+    auditLogs[order.id] = []
+  } finally {
+    auditLoading[order.id] = false
+  }
+}
 </script>
 
 <template>
@@ -142,10 +170,30 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
                 >
                   Cancel
                 </button>
+                <button
+                  type="button"
+                  class="admin-table__action"
+                  @click="toggleHistory(order)"
+                >
+                  {{ expandedOrderId === order.id ? 'Hide history' : 'History' }}
+                </button>
               </td>
             </tr>
             <tr v-if="actionErrors[order.id]">
               <td colspan="6" class="admin-table__row-error">{{ actionErrors[order.id] }}</td>
+            </tr>
+            <tr v-if="expandedOrderId === order.id">
+              <td colspan="6" class="admin-table__history">
+                <p v-if="auditLoading[order.id]" class="admin-table__history-message">Loading history...</p>
+                <p v-else-if="!auditLogs[order.id] || auditLogs[order.id].length === 0" class="admin-table__history-message">
+                  No status changes recorded yet.
+                </p>
+                <ul v-else class="admin-table__history-list">
+                  <li v-for="entry in auditLogs[order.id]" :key="entry.id">
+                    <strong>{{ entry.action }}</strong> by {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
+                  </li>
+                </ul>
+              </td>
             </tr>
           </template>
         </tbody>
@@ -292,5 +340,27 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
 .admin-page__pagination-controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.admin-table__history {
+  background: var(--color-surface);
+  padding: var(--space-sm) var(--space-md) !important;
+}
+
+.admin-table__history-message {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+.admin-table__history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 13px;
+  color: var(--color-text);
 }
 </style>
