@@ -284,6 +284,10 @@ async function toggleHistory(order: Order): Promise<void> {
   justify-content: flex-end;
 }
 
+th.admin-table__actions {
+  justify-content: center;
+}
+
 .admin-table__action {
   font-family: var(--font-sans);
   font-size: 13px;
