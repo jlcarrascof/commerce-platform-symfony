@@ -84,10 +84,27 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
     if (index !== -1) {
       orders.value[index] = response.data
     }
+    // Invalidate the cached history so a re-opened panel reflects this new action.
+    delete auditLogs[order.id]
+    if (expandedOrderId.value === order.id) {
+      await refreshHistory(order.id)
+    }
   } catch (err: any) {
     actionErrors[order.id] = err.response?.data?.error ?? `Could not ${action} the order.`
   } finally {
     pendingActions[order.id] = false
+  }
+}
+
+async function refreshHistory(orderId: number): Promise<void> {
+  auditLoading[orderId] = true
+  try {
+    const response = await apiClient.get<AuditLogEntry[]>(`/orders/${orderId}/audit-log`)
+    auditLogs[orderId] = response.data
+  } catch {
+    auditLogs[orderId] = []
+  } finally {
+    auditLoading[orderId] = false
   }
 }
 
@@ -103,15 +120,7 @@ async function toggleHistory(order: Order): Promise<void> {
     return
   }
 
-  auditLoading[order.id] = true
-  try {
-    const response = await apiClient.get<AuditLogEntry[]>(`/orders/${order.id}/audit-log`)
-    auditLogs[order.id] = response.data
-  } catch {
-    auditLogs[order.id] = []
-  } finally {
-    auditLoading[order.id] = false
-  }
+  await refreshHistory(order.id)
 }
 </script>
 
