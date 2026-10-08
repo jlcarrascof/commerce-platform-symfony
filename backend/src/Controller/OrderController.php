@@ -138,6 +138,38 @@ class OrderController
         return new JsonResponse($this->serialize($order));
     }
 
+    #[Route('/api/orders/{id}/audit-log', name: 'order_audit_log', methods: ['GET'])]
+    public function auditLog(int $id, #[CurrentUser] User $user): JsonResponse
+    {
+        $order = $this->entityManager->getRepository(Order::class)->find($id);
+
+        if (null === $order) {
+            return new JsonResponse(['error' => 'Order not found.'], 404);
+        }
+
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
+        $isOwner = $order->getCustomer()->getUser()->getId() === $user->getId();
+
+        if (!$isAdmin && !$isOwner) {
+            return new JsonResponse(['error' => 'Access denied.'], 403);
+        }
+
+        $entries = $this->entityManager->getRepository(AuditLog::class)->findBy(
+            ['order' => $order],
+            ['createdAt' => 'ASC'],
+        );
+
+        return new JsonResponse(array_map(
+            static fn (AuditLog $entry) => [
+                'id' => $entry->getId(),
+                'action' => $entry->getAction(),
+                'userEmail' => $entry->getUser()->getEmail(),
+                'createdAt' => $entry->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            ],
+            $entries,
+        ));
+    }
+
     #[Route('/api/orders/{id}/confirm', name: 'order_confirm', methods: ['POST'])]
     public function confirm(int $id, #[CurrentUser] User $user): JsonResponse
     {
