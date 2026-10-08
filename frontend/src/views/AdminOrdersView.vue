@@ -285,7 +285,8 @@ async function toggleHistory(order: Order): Promise<void> {
 }
 
 th.admin-table__actions {
-  justify-content: center;
+  justify-content: flex-end;
+  padding-right: 20%;
 }
 
 .admin-table__action {
