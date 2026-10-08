@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import apiClient from '../api/client'
 import type { Order, OrderStatus } from '../types/order'
 import BaseCard from '../components/base/BaseCard.vue'
@@ -9,6 +9,9 @@ const orders = ref<Order[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const statusFilter = ref<OrderStatus | ''>('')
+
+const actionErrors = reactive<Record<number, string>>({})
+const pendingActions = reactive<Record<number, boolean>>({})
 
 const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -48,6 +51,23 @@ async function fetchOrders(): Promise<void> {
 
 onMounted(fetchOrders)
 watch(statusFilter, fetchOrders)
+
+async function performAction(order: Order, action: 'confirm' | 'cancel'): Promise<void> {
+  delete actionErrors[order.id]
+  pendingActions[order.id] = true
+
+  try {
+    const response = await apiClient.post<Order>(`/orders/${order.id}/${action}`)
+    const index = orders.value.findIndex((o) => o.id === order.id)
+    if (index !== -1) {
+      orders.value[index] = response.data
+    }
+  } catch (err: any) {
+    actionErrors[order.id] = err.response?.data?.error ?? `Could not ${action} the order.`
+  } finally {
+    pendingActions[order.id] = false
+  }
+}
 </script>
 
 <template>
@@ -75,16 +95,42 @@ watch(statusFilter, fetchOrders)
             <th>Status</th>
             <th>Created</th>
             <th class="admin-table__total">Total</th>
+            <th class="admin-table__actions">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="order in orders" :key="order.id">
-            <td>#{{ order.id }}</td>
-            <td>{{ order.customer.fullName }}</td>
-            <td><BaseBadge :tone="badgeTone(order.status)">{{ order.status }}</BaseBadge></td>
-            <td>{{ formatDate(order.createdAt) }}</td>
-            <td class="admin-table__total">{{ formatPrice(orderTotal(order)) }}</td>
-          </tr>
+          <template v-for="order in orders" :key="order.id">
+            <tr>
+              <td>#{{ order.id }}</td>
+              <td>{{ order.customer.fullName }}</td>
+              <td><BaseBadge :tone="badgeTone(order.status)">{{ order.status }}</BaseBadge></td>
+              <td>{{ formatDate(order.createdAt) }}</td>
+              <td class="admin-table__total">{{ formatPrice(orderTotal(order)) }}</td>
+              <td class="admin-table__actions">
+                <button
+                  v-if="order.status === 'pending'"
+                  type="button"
+                  class="admin-table__action admin-table__action--confirm"
+                  :disabled="pendingActions[order.id]"
+                  @click="performAction(order, 'confirm')"
+                >
+                  Confirm
+                </button>
+                <button
+                  v-if="order.status !== 'cancelled'"
+                  type="button"
+                  class="admin-table__action admin-table__action--cancel"
+                  :disabled="pendingActions[order.id]"
+                  @click="performAction(order, 'cancel')"
+                >
+                  Cancel
+                </button>
+              </td>
+            </tr>
+            <tr v-if="actionErrors[order.id]">
+              <td colspan="6" class="admin-table__row-error">{{ actionErrors[order.id] }}</td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </BaseCard>
@@ -150,5 +196,43 @@ watch(statusFilter, fetchOrders)
   font-weight: 700;
   color: var(--color-text-heading);
   font-variant-numeric: tabular-nums;
+}
+
+.admin-table__actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.admin-table__action {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.admin-table__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-table__action--confirm {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
+}
+
+.admin-table__action--cancel {
+  color: var(--color-error-600, #dc2626);
+  border-color: color-mix(in srgb, var(--color-error) 40%, var(--color-border));
+}
+
+.admin-table__row-error {
+  color: var(--color-error-600, #dc2626);
+  font-size: 13px;
+  padding-bottom: var(--space-sm);
 }
 </style>
