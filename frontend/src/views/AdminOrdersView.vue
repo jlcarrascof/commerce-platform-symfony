@@ -251,8 +251,11 @@ async function toggleHistory(order: Order): Promise<void> {
   border-collapse: collapse;
 }
 
-.admin-table th {
+.admin-table :where(th) {
   text-align: left;
+}
+
+.admin-table th {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
