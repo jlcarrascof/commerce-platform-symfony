@@ -215,6 +215,7 @@ async function toggleHistory(order: Order): Promise<void> {
 
 <style scoped>
 .admin-page {
+  width: 100%;
   padding: var(--space-xl);
   max-width: 1400px;
   margin: 0 auto;
