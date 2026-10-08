@@ -10,6 +10,10 @@ const isLoading = ref(true)
 const error = ref<string | null>(null)
 const statusFilter = ref<OrderStatus | ''>('')
 
+const page = ref(1)
+const limit = 10
+const totalCount = ref(0)
+
 const actionErrors = reactive<Record<number, string>>({})
 const pendingActions = reactive<Record<number, boolean>>({})
 
@@ -39,9 +43,14 @@ async function fetchOrders(): Promise<void> {
 
   try {
     const response = await apiClient.get<Order[]>('/orders', {
-      params: statusFilter.value ? { status: statusFilter.value } : {},
+      params: {
+        page: page.value,
+        limit,
+        ...(statusFilter.value ? { status: statusFilter.value } : {}),
+      },
     })
     orders.value = response.data
+    totalCount.value = Number(response.headers['x-total-count'] ?? response.data.length)
   } catch {
     error.value = 'Could not load orders. Please try again later.'
   } finally {
@@ -49,8 +58,16 @@ async function fetchOrders(): Promise<void> {
   }
 }
 
+function goToPage(nextPage: number): void {
+  page.value = nextPage
+  fetchOrders()
+}
+
 onMounted(fetchOrders)
-watch(statusFilter, fetchOrders)
+watch(statusFilter, () => {
+  page.value = 1
+  fetchOrders()
+})
 
 async function performAction(order: Order, action: 'confirm' | 'cancel'): Promise<void> {
   delete actionErrors[order.id]
@@ -134,6 +151,17 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
         </tbody>
       </table>
     </BaseCard>
+
+    <div v-if="!isLoading && !error && totalCount > 0" class="admin-page__pagination">
+      <span class="admin-page__pagination-info">
+        Showing {{ (page - 1) * limit + 1 }}–{{ Math.min(page * limit, totalCount) }} of {{ totalCount }}
+      </span>
+      <div class="admin-page__pagination-controls">
+        <button type="button" :disabled="page === 1" @click="goToPage(page - 1)">Previous</button>
+        <span>Page {{ page }} of {{ Math.max(1, Math.ceil(totalCount / limit)) }}</span>
+        <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">Next</button>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -234,5 +262,35 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
   color: var(--color-error-600, #dc2626);
   font-size: 13px;
   padding-bottom: var(--space-sm);
+}
+
+.admin-page__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.admin-page__pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.admin-page__pagination-controls button {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.admin-page__pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
