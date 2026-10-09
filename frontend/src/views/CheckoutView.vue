@@ -221,4 +221,20 @@ async function placeOrder(): Promise<void> {
   color: var(--color-text-heading);
   margin: 0;
 }
+
+@media (max-width: 480px) {
+  .checkout-page {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .checkout-table__unit-price,
+  .checkout-table__line-total {
+    width: auto;
+  }
+
+  .checkout-table th,
+  .checkout-table td {
+    font-size: 13px;
+  }
+}
 </style>
