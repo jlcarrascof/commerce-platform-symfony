@@ -110,4 +110,28 @@ function handleLogout(): void {
   cursor: pointer;
   padding: 0;
 }
+
+@media (max-width: 640px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+  }
+
+  .app-header__brand {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  .app-header__nav {
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-md);
+    row-gap: var(--space-xs);
+    font-size: 14px;
+  }
+
+  .app-header__session-email {
+    display: none;
+  }
+}
 </style>

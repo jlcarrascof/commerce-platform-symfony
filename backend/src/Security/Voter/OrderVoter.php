@@ -7,6 +7,9 @@ use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
+/**
+ * @extends Voter<string, Order>
+ */
 class OrderVoter extends Voter
 {
     public const CONFIRM = 'ORDER_CONFIRM';

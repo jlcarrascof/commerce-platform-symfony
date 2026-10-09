@@ -244,6 +244,9 @@ class OrderController
         return $this->entityManager->getRepository(Customer::class)->findOneBy(['user' => $user]);
     }
 
+    /**
+     * @return array{id: ?int, status: string, createdAt: string, customer: array{id: ?int, fullName: string}, items: list<array{productId: ?int, productName: string, quantity: int, unitPriceInCents: int}>}
+     */
     private function serialize(Order $order): array
     {
         return [
@@ -254,15 +257,15 @@ class OrderController
                 'id' => $order->getCustomer()->getId(),
                 'fullName' => $order->getCustomer()->getFullName(),
             ],
-            'items' => array_map(
-                static fn ($item) => [
+            'items' => array_values(array_map(
+                static fn (OrderItem $item) => [
                     'productId' => $item->getProduct()->getId(),
                     'productName' => $item->getProduct()->getName(),
                     'quantity' => $item->getQuantity(),
                     'unitPriceInCents' => $item->getUnitPriceInCents(),
                 ],
                 $order->getItems()->toArray(),
-            ),
+            )),
         ];
     }
 }

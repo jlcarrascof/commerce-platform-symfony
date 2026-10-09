@@ -91,6 +91,9 @@ class ProductController
         return new JsonResponse($this->serialize($product), 201);
     }
 
+    /**
+     * @return array{id: ?int, name: string, slug: string, description: string, priceInCents: int, stock: int, imageUrl: string, category: array{id: ?int, name: string, slug: string}}
+     */
     private function serialize(Product $product): array
     {
         return [
@@ -109,6 +112,11 @@ class ProductController
         ];
     }
 
+    /**
+     * @param iterable<\Symfony\Component\Validator\ConstraintViolationInterface> $violations
+     *
+     * @return list<array{field: string, message: string}>
+     */
     private function formatViolations(iterable $violations): array
     {
         $errors = [];

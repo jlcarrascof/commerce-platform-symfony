@@ -48,6 +48,10 @@ class OrderFixtures extends Fixture implements DependentFixtureInterface
 
         $product = $manager->getRepository(Product::class)->findOneBy(['slug' => $productSlug]);
 
+        if (null === $product) {
+            throw new \RuntimeException(sprintf('Unknown product slug "%s" in order fixtures.', $productSlug));
+        }
+
         $order = new Order($customer);
         $order->setStatus($status);
         $manager->persist($order);

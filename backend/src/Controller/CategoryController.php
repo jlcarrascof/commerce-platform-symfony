@@ -48,6 +48,7 @@ class CategoryController
         return new JsonResponse($this->serialize($category), 201);
     }
 
+    /** @return array{id: ?int, name: string, slug: string} */
     private function serialize(Category $category): array
     {
         return [
@@ -57,6 +58,11 @@ class CategoryController
         ];
     }
 
+    /**
+     * @param iterable<\Symfony\Component\Validator\ConstraintViolationInterface> $violations
+     *
+     * @return list<array{field: string, message: string}>
+     */
     private function formatViolations(iterable $violations): array
     {
         $errors = [];
