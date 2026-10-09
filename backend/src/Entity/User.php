@@ -50,8 +50,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $email;
     }
 
+    /** @return non-empty-string */
     public function getUserIdentifier(): string
     {
+        assert('' !== $this->email, 'User email should never be blank, the NotBlank constraint guarantees it.');
+
         return $this->email;
     }
 
@@ -71,7 +74,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $roles = $this->roles;
         $roles[] = 'ROLE_USER';
 
-        return array_unique($roles);
+        return array_values(array_unique($roles));
     }
 
     /** @param list<string> $roles */
