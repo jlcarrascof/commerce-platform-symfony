@@ -306,6 +306,7 @@ th.admin-table__actions {
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
 }
 
@@ -352,10 +353,15 @@ th.admin-table__actions {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
 }
 
 .admin-page__pagination-controls button:disabled {
+  /* Explicit color keeps this readable instead of falling back to the
+     browser's default disabled-control color, which is invisible
+     against a dark surface. */
+  color: var(--color-text-muted);
   opacity: 0.5;
   cursor: not-allowed;
 }
