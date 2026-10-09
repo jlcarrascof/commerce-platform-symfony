@@ -155,12 +155,12 @@ async function toggleHistory(order: Order): Promise<void> {
         <tbody>
           <template v-for="order in orders" :key="order.id">
             <tr>
-              <td>#{{ order.id }}</td>
-              <td>{{ order.customer.fullName }}</td>
-              <td><BaseBadge :tone="badgeTone(order.status)">{{ order.status }}</BaseBadge></td>
-              <td>{{ formatDate(order.createdAt) }}</td>
-              <td class="admin-table__total">{{ formatPrice(orderTotal(order)) }}</td>
-              <td class="admin-table__actions">
+              <td data-label="ID">#{{ order.id }}</td>
+              <td data-label="Customer">{{ order.customer.fullName }}</td>
+              <td data-label="Status"><BaseBadge :tone="badgeTone(order.status)">{{ order.status }}</BaseBadge></td>
+              <td data-label="Created">{{ formatDate(order.createdAt) }}</td>
+              <td data-label="Total" class="admin-table__total">{{ formatPrice(orderTotal(order)) }}</td>
+              <td data-label="Actions" class="admin-table__actions">
                 <button
                   v-if="order.status === 'pending'"
                   type="button"
@@ -380,5 +380,101 @@ th.admin-table__actions {
   gap: var(--space-xs);
   font-size: 13px;
   color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .admin-page {
+    padding: var(--space-md);
+  }
+
+  .admin-page__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .admin-page__filter {
+    width: 100%;
+  }
+
+  /* Collapse the table into a stack of cards: each row becomes a card,
+     each cell becomes a labelled line using its data-label attribute. */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-table tr {
+    margin-bottom: var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .admin-table tr:has(.admin-table__row-error),
+  .admin-table tr:has(.admin-table__history) {
+    margin-bottom: 0;
+    border: none;
+    padding: 0;
+  }
+
+  .admin-table__row-error,
+  .admin-table__history {
+    display: block !important;
+    text-align: left;
+  }
+
+  .admin-table__row-error::before,
+  .admin-table__history::before {
+    content: none;
+  }
+
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--color-border);
+    text-align: right;
+  }
+
+  .admin-table td:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .admin-table__actions {
+    justify-content: flex-end;
+    padding-right: 0;
+    flex-wrap: wrap;
+  }
+
+  th.admin-table__actions {
+    display: none;
+  }
+
+  .admin-page__pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+    text-align: center;
+  }
 }
 </style>
