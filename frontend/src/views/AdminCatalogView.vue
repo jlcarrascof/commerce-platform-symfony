@@ -145,7 +145,8 @@ async function restoreItem(item: CatalogItem): Promise<void> {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Slug</th>
+            <th v-if="activeTab === 'products'">Category</th>
+            <th v-else>Slug</th>
             <th v-if="activeTab === 'products'">Price</th>
             <th v-if="activeTab === 'products'">Stock</th>
             <th class="admin-table__actions">Actions</th>
@@ -155,7 +156,8 @@ async function restoreItem(item: CatalogItem): Promise<void> {
           <template v-for="item in visibleItems" :key="item.id">
             <tr>
               <td data-label="Name">{{ item.name }}</td>
-              <td data-label="Slug">{{ item.slug }}</td>
+              <td v-if="activeTab === 'products'" data-label="Category">{{ (item as Product).category.name }}</td>
+              <td v-else data-label="Slug">{{ (item as Category).slug }}</td>
               <td v-if="activeTab === 'products'" data-label="Price">{{ formatPrice((item as Product).priceInCents) }}</td>
               <td v-if="activeTab === 'products'" data-label="Stock">{{ (item as Product).stock }}</td>
               <td data-label="Actions" class="admin-table__actions">
