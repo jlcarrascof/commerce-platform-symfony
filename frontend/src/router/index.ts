@@ -43,6 +43,10 @@ const router = createRouter({
       component: AdminCatalogView,
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: { name: 'home' },
+    },
   ],
 })
 
