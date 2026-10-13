@@ -107,7 +107,7 @@ class OrderConfirmedAsyncTest extends WebTestCase
         self::assertCount(0, $auditLogsBefore, 'The email should not be sent synchronously on the request thread.');
 
         // Process the message directly, the same way the real worker would,
-        // without waiting on the handler's artificial sleep(3) via a real queue.
+        // without waiting on the handler's artificial sleep(5) via a real queue.
         $handler = $container->get(OrderConfirmedHandler::class);
         $handler(new OrderConfirmed($order['id'], $bob->getId()));
 

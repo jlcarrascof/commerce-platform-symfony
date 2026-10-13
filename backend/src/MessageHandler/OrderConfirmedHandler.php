@@ -33,7 +33,7 @@ class OrderConfirmedHandler
         // Simulates the latency of a real confirmation email provider. This delay
         // is the whole point of this checkpoint: it happens here, out-of-band,
         // never on the HTTP request thread that confirmed the order.
-        sleep(3);
+        sleep(5);
 
         $this->logger->info('Confirmation email sent for order #{orderId}.', ['orderId' => $order->getId()]);
 
