@@ -227,14 +227,25 @@ async function placeOrder(): Promise<void> {
     padding: var(--space-md) var(--space-sm);
   }
 
+  .checkout-card__title {
+    font-size: 26px;
+  }
+
   .checkout-table__unit-price,
   .checkout-table__line-total {
     width: auto;
   }
 
-  .checkout-table th,
+  .checkout-table th {
+    font-size: 10px;
+  }
+
   .checkout-table td {
-    font-size: 13px;
+    font-size: 12px;
+  }
+
+  .checkout-table__total-value {
+    font-size: 18px;
   }
 }
 </style>
