@@ -108,6 +108,43 @@ class ProductController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[Route('/api/products/deleted', name: 'product_list_deleted', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function listDeleted(): JsonResponse
+    {
+        $filters = $this->entityManager->getFilters();
+        $filters->disable('soft_deleteable');
+
+        $products = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
+            ->andWhere('p.deletedAt IS NOT NULL')
+            ->orderBy('p.deletedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $filters->enable('soft_deleteable');
+
+        return new JsonResponse(array_map($this->serialize(...), $products));
+    }
+
+    #[Route('/api/products/{id}/restore', name: 'product_restore', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function restore(int $id): JsonResponse
+    {
+        $filters = $this->entityManager->getFilters();
+        $filters->disable('soft_deleteable');
+        $product = $this->entityManager->getRepository(Product::class)->find($id);
+        $filters->enable('soft_deleteable');
+
+        if (null === $product) {
+            return new JsonResponse(['message' => 'Product not found.'], 404);
+        }
+
+        $product->restore();
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($product));
+    }
+
     /**
      * @return array{id: ?int, name: string, slug: string, description: string, priceInCents: int, stock: int, imageUrl: string, category: array{id: ?int, name: string, slug: string}}
      */

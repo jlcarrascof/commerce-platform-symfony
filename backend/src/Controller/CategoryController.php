@@ -65,6 +65,43 @@ class CategoryController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[Route('/api/categories/deleted', name: 'category_list_deleted', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function listDeleted(): JsonResponse
+    {
+        $filters = $this->entityManager->getFilters();
+        $filters->disable('soft_deleteable');
+
+        $categories = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
+            ->andWhere('c.deletedAt IS NOT NULL')
+            ->orderBy('c.deletedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $filters->enable('soft_deleteable');
+
+        return new JsonResponse(array_map($this->serialize(...), $categories));
+    }
+
+    #[Route('/api/categories/{id}/restore', name: 'category_restore', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function restore(int $id): JsonResponse
+    {
+        $filters = $this->entityManager->getFilters();
+        $filters->disable('soft_deleteable');
+        $category = $this->entityManager->getRepository(Category::class)->find($id);
+        $filters->enable('soft_deleteable');
+
+        if (null === $category) {
+            return new JsonResponse(['message' => 'Category not found.'], 404);
+        }
+
+        $category->restore();
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($category));
+    }
+
     /** @return array{id: ?int, name: string, slug: string} */
     private function serialize(Category $category): array
     {
