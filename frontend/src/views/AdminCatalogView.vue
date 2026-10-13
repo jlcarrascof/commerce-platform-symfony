@@ -27,10 +27,6 @@ function formatPrice(priceInCents: number): string {
   return formatter.format(priceInCents / 100)
 }
 
-function isProduct(item: CatalogItem): item is Product {
-  return 'priceInCents' in item
-}
-
 const visibleItems = computed<CatalogItem[]>(() => {
   if (activeTab.value === 'products') {
     return showDeleted.value ? deletedProducts.value : products.value
