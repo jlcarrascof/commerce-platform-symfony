@@ -6,6 +6,7 @@ use App\Entity\Category;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -46,6 +47,22 @@ class CategoryController
         $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($category), 201);
+    }
+
+    #[Route('/api/categories/{id}', name: 'category_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function delete(int $id): JsonResponse
+    {
+        $category = $this->entityManager->getRepository(Category::class)->find($id);
+
+        if (null === $category) {
+            return new JsonResponse(['message' => 'Category not found.'], 404);
+        }
+
+        $category->markAsDeleted();
+        $this->entityManager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     /** @return array{id: ?int, name: string, slug: string} */
