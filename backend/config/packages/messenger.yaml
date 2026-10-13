@@ -1,0 +1,20 @@
+framework:
+    messenger:
+        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
+        # failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            sync: 'sync://'
+
+        routing:
+            App\Message\OrderConfirmed: async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                # Messages are handled synchronously in tests, in the same process,
+                # so assertions can run right after dispatching without a worker.
+                async: 'in-memory://'
