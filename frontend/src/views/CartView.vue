@@ -163,4 +163,34 @@ function increase(productId: number, currentQuantity: number): void {
   margin-top: var(--space-md);
   width: 100%;
 }
+
+@media (max-width: 600px) {
+  .cart-page {
+    padding: var(--space-md);
+  }
+
+  .cart-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm) var(--space-md);
+  }
+
+  .cart-item__image {
+    width: 48px;
+    height: 48px;
+  }
+
+  .cart-item__info {
+    flex: 1 1 140px;
+  }
+
+  /* Image + name/price take the first line; quantity, subtotal and
+     remove wrap together onto a second line below them. */
+  .cart-item__quantity,
+  .cart-item__subtotal,
+  .cart-item__remove {
+    flex: 0 0 auto;
+  }
+}
 </style>

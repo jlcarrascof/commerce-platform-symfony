@@ -38,7 +38,7 @@ class Product
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
-    #[Assert\Url]
+    #[Assert\Url(requireTld: false)]
     private string $imageUrl;
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'products')]
