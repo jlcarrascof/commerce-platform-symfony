@@ -4,6 +4,7 @@ import LoginView from '../views/LoginView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import AdminOrdersView from '../views/AdminOrdersView.vue'
+import AdminCatalogView from '../views/AdminCatalogView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -35,6 +36,16 @@ const router = createRouter({
       name: 'admin',
       component: AdminOrdersView,
       meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/admin/catalog',
+      name: 'admin-catalog',
+      component: AdminCatalogView,
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: { name: 'home' },
     },
   ],
 })

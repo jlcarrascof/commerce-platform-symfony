@@ -187,18 +187,23 @@ class OrderController
             return new JsonResponse(['error' => 'Only pending orders can be confirmed.'], 422);
         }
 
-        foreach ($order->getItems() as $item) {
-            $product = $item->getProduct();
-            if ($product->getStock() < $item->getQuantity()) {
-                return new JsonResponse([
-                    'error' => sprintf('Insufficient stock for "%s" (requested %d, available %d).', $product->getName(), $item->getQuantity(), $product->getStock()),
-                ], 422);
+        $this->entityManager->getFilters()->disable('soft_deleteable');
+        try {
+            foreach ($order->getItems() as $item) {
+                $product = $item->getProduct();
+                if ($product->getStock() < $item->getQuantity()) {
+                    return new JsonResponse([
+                        'error' => sprintf('Insufficient stock for "%s" (requested %d, available %d).', $product->getName(), $item->getQuantity(), $product->getStock()),
+                    ], 422);
+                }
             }
-        }
 
-        foreach ($order->getItems() as $item) {
-            $product = $item->getProduct();
-            $product->setStock($product->getStock() - $item->getQuantity());
+            foreach ($order->getItems() as $item) {
+                $product = $item->getProduct();
+                $product->setStock($product->getStock() - $item->getQuantity());
+            }
+        } finally {
+            $this->entityManager->getFilters()->enable('soft_deleteable');
         }
 
         $order->setStatus(OrderStatus::Confirmed);
@@ -226,9 +231,14 @@ class OrderController
         }
 
         if (OrderStatus::Confirmed === $order->getStatus()) {
-            foreach ($order->getItems() as $item) {
-                $product = $item->getProduct();
-                $product->setStock($product->getStock() + $item->getQuantity());
+            $this->entityManager->getFilters()->disable('soft_deleteable');
+            try {
+                foreach ($order->getItems() as $item) {
+                    $product = $item->getProduct();
+                    $product->setStock($product->getStock() + $item->getQuantity());
+                }
+            } finally {
+                $this->entityManager->getFilters()->enable('soft_deleteable');
             }
         }
 
@@ -249,6 +259,24 @@ class OrderController
      */
     private function serialize(Order $order): array
     {
+        // Order items must stay visible even once their product is soft-deleted,
+        // otherwise historical orders would 500 as soon as their product disappears
+        // from the catalog (the lazy Product proxy load would hit the filter too).
+        $this->entityManager->getFilters()->disable('soft_deleteable');
+        try {
+            $items = array_values(array_map(
+                static fn (OrderItem $item) => [
+                    'productId' => $item->getProduct()->getId(),
+                    'productName' => $item->getProduct()->getName(),
+                    'quantity' => $item->getQuantity(),
+                    'unitPriceInCents' => $item->getUnitPriceInCents(),
+                ],
+                $order->getItems()->toArray(),
+            ));
+        } finally {
+            $this->entityManager->getFilters()->enable('soft_deleteable');
+        }
+
         return [
             'id' => $order->getId(),
             'status' => $order->getStatus()->value,
@@ -257,15 +285,7 @@ class OrderController
                 'id' => $order->getCustomer()->getId(),
                 'fullName' => $order->getCustomer()->getFullName(),
             ],
-            'items' => array_values(array_map(
-                static fn (OrderItem $item) => [
-                    'productId' => $item->getProduct()->getId(),
-                    'productName' => $item->getProduct()->getName(),
-                    'quantity' => $item->getQuantity(),
-                    'unitPriceInCents' => $item->getUnitPriceInCents(),
-                ],
-                $order->getItems()->toArray(),
-            )),
+            'items' => $items,
         ];
     }
 }

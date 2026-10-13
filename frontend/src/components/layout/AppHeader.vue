@@ -10,6 +10,7 @@ const router = useRouter()
 const navLinks = [
   { label: 'Catalog', to: '/' },
   { label: 'Admin', to: '/admin' },
+  { label: 'Catalog admin', to: '/admin/catalog' },
 ]
 
 function handleLogout(): void {

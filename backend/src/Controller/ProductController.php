@@ -7,6 +7,7 @@ use App\Entity\Product;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -89,6 +90,59 @@ class ProductController
         $this->entityManager->flush();
 
         return new JsonResponse($this->serialize($product), 201);
+    }
+
+    #[Route('/api/products/{id}', name: 'product_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function delete(int $id): JsonResponse
+    {
+        $product = $this->entityManager->getRepository(Product::class)->find($id);
+
+        if (null === $product) {
+            return new JsonResponse(['message' => 'Product not found.'], 404);
+        }
+
+        $product->markAsDeleted();
+        $this->entityManager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/api/products/deleted', name: 'product_list_deleted', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function listDeleted(): JsonResponse
+    {
+        $filters = $this->entityManager->getFilters();
+        $filters->disable('soft_deleteable');
+
+        $products = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
+            ->andWhere('p.deletedAt IS NOT NULL')
+            ->orderBy('p.deletedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $filters->enable('soft_deleteable');
+
+        return new JsonResponse(array_map($this->serialize(...), $products));
+    }
+
+    #[Route('/api/products/{id}/restore', name: 'product_restore', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function restore(int $id): JsonResponse
+    {
+        $filters = $this->entityManager->getFilters();
+        $filters->disable('soft_deleteable');
+        $product = $this->entityManager->getRepository(Product::class)->find($id);
+        $filters->enable('soft_deleteable');
+
+        if (null === $product) {
+            return new JsonResponse(['message' => 'Product not found.'], 404);
+        }
+
+        $product->restore();
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($product));
     }
 
     /**
