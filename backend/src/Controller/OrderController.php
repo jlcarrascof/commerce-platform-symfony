@@ -9,10 +9,12 @@ use App\Entity\OrderItem;
 use App\Entity\OrderStatus;
 use App\Entity\Product;
 use App\Entity\User;
+use App\Message\OrderConfirmed;
 use App\Security\Voter\OrderVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -22,6 +24,7 @@ class OrderController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly AuthorizationCheckerInterface $authorizationChecker,
+        private readonly MessageBusInterface $messageBus,
     ) {
     }
 
@@ -209,6 +212,15 @@ class OrderController
         $order->setStatus(OrderStatus::Confirmed);
         $this->entityManager->persist(new AuditLog($order, $user, 'confirmed'));
         $this->entityManager->flush();
+
+        // Secondary effects of a confirmation (sending the confirmation email,
+        // updating metrics, ...) run out-of-band so this request stays fast
+        // regardless of how slow those effects are. See OrderConfirmedHandler.
+        $orderId = $order->getId();
+        $userId = $user->getId();
+        assert(null !== $orderId, 'A flushed Order always has an id.');
+        assert(null !== $userId, 'An authenticated User always has an id.');
+        $this->messageBus->dispatch(new OrderConfirmed($orderId, $userId));
 
         return new JsonResponse($this->serialize($order));
     }

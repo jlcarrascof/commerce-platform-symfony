@@ -193,6 +193,17 @@ async function toggleHistory(order: Order): Promise<void> {
             </tr>
             <tr v-if="expandedOrderId === order.id">
               <td colspan="6" class="admin-table__history">
+                <div class="admin-table__history-header">
+                  <span class="admin-table__history-title">History</span>
+                  <button
+                    type="button"
+                    class="admin-table__history-refresh"
+                    :disabled="auditLoading[order.id]"
+                    @click="refreshHistory(order.id)"
+                  >
+                    Refresh
+                  </button>
+                </div>
                 <p v-if="auditLoading[order.id]" class="admin-table__history-message">Loading history...</p>
                 <p v-else-if="!auditLogs[order.id] || auditLogs[order.id].length === 0" class="admin-table__history-message">
                   No status changes recorded yet.
@@ -369,6 +380,39 @@ th.admin-table__actions {
 .admin-table__history {
   background: var(--color-surface);
   padding: var(--space-sm) var(--space-md) !important;
+}
+
+.admin-table__history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.admin-table__history-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.admin-table__history-refresh {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.admin-table__history-refresh:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .admin-table__history-message {
