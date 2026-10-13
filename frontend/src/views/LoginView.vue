@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { isAxiosError } from 'axios'
 import { useAuthStore } from '../stores/auth'
 import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
@@ -20,8 +21,12 @@ async function handleSubmit(): Promise<void> {
   try {
     await authStore.login(email.value, password.value)
     router.push('/')
-  } catch {
-    error.value = 'Invalid email or password.'
+  } catch (err) {
+    if (isAxiosError(err) && err.response?.status === 429) {
+      error.value = 'Too many login attempts. Please wait a minute and try again.'
+    } else {
+      error.value = 'Invalid email or password.'
+    }
   } finally {
     isSubmitting.value = false
   }
