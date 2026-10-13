@@ -217,8 +217,10 @@ class OrderController
         // updating metrics, ...) run out-of-band so this request stays fast
         // regardless of how slow those effects are. See OrderConfirmedHandler.
         $orderId = $order->getId();
+        $userId = $user->getId();
         assert(null !== $orderId, 'A flushed Order always has an id.');
-        $this->messageBus->dispatch(new OrderConfirmed($orderId));
+        assert(null !== $userId, 'An authenticated User always has an id.');
+        $this->messageBus->dispatch(new OrderConfirmed($orderId, $userId));
 
         return new JsonResponse($this->serialize($order));
     }
