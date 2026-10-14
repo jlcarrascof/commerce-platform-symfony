@@ -11,12 +11,17 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class ProductController
 {
+    private const CACHE_TTL_SECONDS = 60;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
+        private readonly TagAwareCacheInterface $productsCache,
     ) {
     }
 
@@ -25,34 +30,53 @@ class ProductController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
-        $categorySlug = $request->query->get('category');
+        $categorySlug = (string) $request->query->get('category', '');
         $sort = (string) $request->query->get('sort', 'name');
 
-        $qb = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
-            ->join('p.category', 'c');
+        $cacheKey = 'products_list_'.md5(serialize([$page, $limit, $categorySlug, $sort]));
+        $isHit = true;
 
-        if (null !== $categorySlug && '' !== $categorySlug) {
-            $qb->andWhere('c.slug = :categorySlug')->setParameter('categorySlug', $categorySlug);
-        }
+        /** @var array{items: list<array{id: ?int, name: string, slug: string, description: string, priceInCents: int, stock: int, imageUrl: string, category: array{id: ?int, name: string, slug: string}}>, totalCount: int} $payload */
+        $payload = $this->productsCache->get(
+            $cacheKey,
+            function (ItemInterface $item) use (&$isHit, $categorySlug, $sort, $page, $limit): array {
+                $isHit = false;
+                $item->tag('products');
+                $item->expiresAfter(self::CACHE_TTL_SECONDS);
 
-        $sortFields = [
-            'name' => 'p.name ASC',
-            '-name' => 'p.name DESC',
-            'price' => 'p.priceInCents ASC',
-            '-price' => 'p.priceInCents DESC',
-        ];
-        $qb->orderBy(...explode(' ', $sortFields[$sort] ?? $sortFields['name']));
+                $qb = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
+                    ->join('p.category', 'c');
 
-        $totalCount = (clone $qb)->select('COUNT(p.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+                if ('' !== $categorySlug) {
+                    $qb->andWhere('c.slug = :categorySlug')->setParameter('categorySlug', $categorySlug);
+                }
 
-        $products = $qb
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+                $sortFields = [
+                    'name' => 'p.name ASC',
+                    '-name' => 'p.name DESC',
+                    'price' => 'p.priceInCents ASC',
+                    '-price' => 'p.priceInCents DESC',
+                ];
+                $qb->orderBy(...explode(' ', $sortFields[$sort] ?? $sortFields['name']));
 
-        $response = new JsonResponse(array_map($this->serialize(...), $products));
-        $response->headers->set('X-Total-Count', (string) $totalCount);
+                $totalCount = (int) (clone $qb)->select('COUNT(p.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+                $products = $qb
+                    ->setFirstResult(($page - 1) * $limit)
+                    ->setMaxResults($limit)
+                    ->getQuery()
+                    ->getResult();
+
+                return [
+                    'items' => array_map($this->serialize(...), $products),
+                    'totalCount' => $totalCount,
+                ];
+            },
+        );
+
+        $response = new JsonResponse($payload['items']);
+        $response->headers->set('X-Total-Count', (string) $payload['totalCount']);
+        $response->headers->set('X-Cache', $isHit ? 'HIT' : 'MISS');
 
         return $response;
     }
@@ -88,6 +112,7 @@ class ProductController
 
         $this->entityManager->persist($product);
         $this->entityManager->flush();
+        $this->productsCache->invalidateTags(['products']);
 
         return new JsonResponse($this->serialize($product), 201);
     }
@@ -104,6 +129,7 @@ class ProductController
 
         $product->markAsDeleted();
         $this->entityManager->flush();
+        $this->productsCache->invalidateTags(['products']);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
@@ -141,6 +167,7 @@ class ProductController
 
         $product->restore();
         $this->entityManager->flush();
+        $this->productsCache->invalidateTags(['products']);
 
         return new JsonResponse($this->serialize($product));
     }

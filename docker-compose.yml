@@ -6,8 +6,10 @@ services:
       - ./backend:/var/www/backend
     environment:
       DATABASE_URL: "postgresql://app:app@postgres:5432/app?serverVersion=16&charset=utf8"
+      REDIS_URL: "redis://redis:6379"
     depends_on:
       - postgres
+      - redis
 
   nginx:
     image: nginx:1.27-alpine
@@ -29,6 +31,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:
