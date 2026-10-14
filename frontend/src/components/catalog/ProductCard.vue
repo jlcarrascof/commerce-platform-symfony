@@ -75,8 +75,10 @@ function handleAddToCart(): void {
 
 .product-card__footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-xs) var(--space-sm);
   margin-top: var(--space-sm);
 }
 
