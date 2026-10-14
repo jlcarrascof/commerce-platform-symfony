@@ -204,6 +204,24 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   padding: 0;
 }
 
+:root[data-theme='dark'] .app-header__session-email {
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .app-header__logout {
+  color: var(--color-accent-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-header__session-email {
+    color: var(--color-text);
+  }
+
+  :root:not([data-theme='light']) .app-header__logout {
+    color: var(--color-accent-300);
+  }
+}
+
 .app-header__locale {
   position: relative;
 }
