@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
 import type { Product } from '../types/product'
@@ -13,15 +13,16 @@ const { t } = useI18n()
 const activeTab = ref<Tab>('products')
 const showDeleted = ref(false)
 
-const products = ref<Product[]>([])
-const deletedProducts = ref<Product[]>([])
-const categories = ref<Category[]>([])
-const deletedCategories = ref<Category[]>([])
+const visibleItems = ref<CatalogItem[]>([])
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const rowErrors = reactive<Record<number, string>>({})
 const pendingActions = reactive<Record<number, boolean>>({})
+
+const page = ref(1)
+const limit = 12
+const totalCount = ref(0)
 
 const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -29,39 +30,17 @@ function formatPrice(priceInCents: number): string {
   return formatter.format(priceInCents / 100)
 }
 
-const visibleItems = computed<CatalogItem[]>(() => {
-  if (activeTab.value === 'products') {
-    return showDeleted.value ? deletedProducts.value : products.value
-  }
-  return showDeleted.value ? deletedCategories.value : categories.value
-})
-
-async function fetchActive(): Promise<void> {
-  if (activeTab.value === 'products') {
-    const response = await apiClient.get<Product[]>('/products', { params: { limit: 100 } })
-    products.value = response.data
-  } else {
-    const response = await apiClient.get<Category[]>('/categories')
-    categories.value = response.data
-  }
-}
-
-async function fetchDeleted(): Promise<void> {
-  if (activeTab.value === 'products') {
-    const response = await apiClient.get<Product[]>('/products/deleted')
-    deletedProducts.value = response.data
-  } else {
-    const response = await apiClient.get<Category[]>('/categories/deleted')
-    deletedCategories.value = response.data
-  }
-}
-
 async function refresh(): Promise<void> {
   isLoading.value = true
   error.value = null
 
+  const resource = activeTab.value === 'products' ? 'products' : 'categories'
+  const path = showDeleted.value ? `/${resource}/deleted` : `/${resource}`
+
   try {
-    await Promise.all([fetchActive(), fetchDeleted()])
+    const response = await apiClient.get<CatalogItem[]>(path, { params: { page: page.value, limit } })
+    visibleItems.value = response.data
+    totalCount.value = Number(response.headers['x-total-count'] ?? response.data.length)
   } catch {
     error.value = t('common.genericLoadError')
   } finally {
@@ -69,9 +48,17 @@ async function refresh(): Promise<void> {
   }
 }
 
+function goToPage(nextPage: number): void {
+  page.value = nextPage
+  refresh()
+}
+
 onMounted(refresh)
 watch(activeTab, () => {
   showDeleted.value = false
+})
+watch([activeTab, showDeleted], () => {
+  page.value = 1
   refresh()
 })
 
@@ -192,6 +179,17 @@ async function restoreItem(item: CatalogItem): Promise<void> {
         </tbody>
       </table>
     </BaseCard>
+
+    <div v-if="!isLoading && !error && totalCount > limit" class="admin-page__pagination">
+      <span class="admin-page__pagination-info">
+        {{ t('admin.showing', { from: (page - 1) * limit + 1, to: Math.min(page * limit, totalCount), total: totalCount }) }}
+      </span>
+      <div class="admin-page__pagination-controls">
+        <button type="button" :disabled="page === 1" @click="goToPage(page - 1)">{{ t('admin.previous') }}</button>
+        <span>{{ t('admin.pageOf', { page, total: Math.max(1, Math.ceil(totalCount / limit)) }) }}</span>
+        <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">{{ t('admin.next') }}</button>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -320,6 +318,38 @@ th.admin-table__actions {
   padding-bottom: var(--space-sm);
 }
 
+.admin-page__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.admin-page__pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.admin-page__pagination-controls button {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.admin-page__pagination-controls button:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .admin-page {
     padding: var(--space-md);
@@ -404,6 +434,13 @@ th.admin-table__actions {
 
   th.admin-table__actions {
     display: none;
+  }
+
+  .admin-page__pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+    text-align: center;
   }
 }
 </style>

@@ -136,20 +136,32 @@ class ProductController
 
     #[Route('/api/products/deleted', name: 'product_list_deleted', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function listDeleted(): JsonResponse
+    public function listDeleted(Request $request): JsonResponse
     {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+
         $filters = $this->entityManager->getFilters();
         $filters->disable('soft_deleteable');
 
-        $products = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
+        $qb = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
             ->andWhere('p.deletedAt IS NOT NULL')
-            ->orderBy('p.deletedAt', 'DESC')
+            ->orderBy('p.deletedAt', 'DESC');
+
+        $totalCount = (int) (clone $qb)->select('COUNT(p.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+        $products = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
         $filters->enable('soft_deleteable');
 
-        return new JsonResponse(array_map($this->serialize(...), $products));
+        $response = new JsonResponse(array_map($this->serialize(...), $products));
+        $response->headers->set('X-Total-Count', (string) $totalCount);
+
+        return $response;
     }
 
     #[Route('/api/products/{id}/restore', name: 'product_restore', methods: ['POST'])]
