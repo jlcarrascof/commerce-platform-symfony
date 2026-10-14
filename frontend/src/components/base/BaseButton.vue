@@ -24,6 +24,7 @@ withDefaults(
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 

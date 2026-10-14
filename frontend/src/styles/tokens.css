@@ -43,6 +43,14 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
+
+  /* Glassmorphism: used sparingly on the header and BaseCard only, with a
+     decorative gradient behind the page (see style.css) so the blur has
+     something to show through. Kept subtle on purpose so dense tables
+     (admin screens) stay fully legible. */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: 14px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -53,5 +61,29 @@
     --color-text: var(--color-neutral-300);
     --color-text-heading: var(--color-neutral-0);
     --color-text-muted: var(--color-neutral-500);
+    --glass-bg: rgba(30, 41, 59, 0.85);
+    --glass-border: rgba(148, 163, 184, 0.18);
   }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: var(--color-neutral-900);
+  --color-surface: #1e293b;
+  --color-border: var(--color-neutral-700);
+  --color-text: var(--color-neutral-300);
+  --color-text-heading: var(--color-neutral-0);
+  --color-text-muted: var(--color-neutral-500);
+  --glass-bg: rgba(30, 41, 59, 0.85);
+  --glass-border: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='light'] {
+  --color-bg: var(--color-neutral-0);
+  --color-surface: var(--color-neutral-50);
+  --color-border: var(--color-neutral-200);
+  --color-text: var(--color-neutral-700);
+  --color-text-heading: var(--color-neutral-900);
+  --color-text-muted: var(--color-neutral-500);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.6);
 }

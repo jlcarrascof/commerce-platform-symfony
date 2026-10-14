@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useCartStore } from '../stores/cart'
 import BaseButton from '../components/base/BaseButton.vue'
 
+const { t } = useI18n()
 const cartStore = useCartStore()
 
 const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -24,9 +26,9 @@ function increase(productId: number, currentQuantity: number): void {
 
 <template>
   <section class="cart-page">
-    <h1>Cart</h1>
+    <h1>{{ t('cart.title') }}</h1>
 
-    <p v-if="cartStore.isEmpty" class="cart-page__message">Your cart is empty.</p>
+    <p v-if="cartStore.isEmpty" class="cart-page__message">{{ t('cart.empty') }}</p>
 
     <template v-else>
       <ul class="cart-page__list">
@@ -43,18 +45,18 @@ function increase(productId: number, currentQuantity: number): void {
           </div>
           <span class="cart-item__subtotal">{{ formatPrice(item.product.priceInCents * item.quantity) }}</span>
           <button type="button" class="cart-item__remove" @click="cartStore.removeItem(item.product.id)">
-            Remove
+            {{ t('cart.remove') }}
           </button>
         </li>
       </ul>
 
       <div class="cart-page__summary">
-        <span class="cart-page__total-label">Total</span>
+        <span class="cart-page__total-label">{{ t('cart.total') }}</span>
         <span class="cart-page__total-value">{{ formattedTotal }}</span>
       </div>
 
       <RouterLink to="/checkout">
-        <BaseButton class="cart-page__checkout">Proceed to checkout</BaseButton>
+        <BaseButton class="cart-page__checkout">{{ t('cart.checkout') }}</BaseButton>
       </RouterLink>
     </template>
   </section>

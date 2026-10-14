@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '../stores/auth'
 import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 
+const { t } = useI18n()
 const email = ref('')
 const password = ref('')
 const error = ref<string | null>(null)
@@ -23,9 +25,9 @@ async function handleSubmit(): Promise<void> {
     router.push('/')
   } catch (err) {
     if (isAxiosError(err) && err.response?.status === 429) {
-      error.value = 'Too many login attempts. Please wait a minute and try again.'
+      error.value = t('login.tooManyAttempts')
     } else {
-      error.value = 'Invalid email or password.'
+      error.value = t('login.invalidCredentials')
     }
   } finally {
     isSubmitting.value = false
@@ -38,31 +40,31 @@ async function handleSubmit(): Promise<void> {
     <aside class="login-view__brand">
       <div class="login-view__brand-content">
         <span class="login-view__brand-mark">◆</span>
-        <h1 class="login-view__brand-title">Commerce Platform</h1>
+        <h1 class="login-view__brand-title">{{ t('login.brandTitle') }}</h1>
         <p class="login-view__brand-tagline">
-          Manage your inventory, track orders and keep your catalog moving — all in one place.
+          {{ t('login.brandTagline') }}
         </p>
       </div>
     </aside>
 
     <div class="login-view__panel">
       <form class="login-view__form" @submit.prevent="handleSubmit">
-        <h2 class="login-view__form-title">Welcome back</h2>
-        <p class="login-view__form-subtitle">Log in to continue to your account.</p>
+        <h2 class="login-view__form-title">{{ t('login.welcomeBack') }}</h2>
+        <p class="login-view__form-subtitle">{{ t('login.subtitle') }}</p>
 
         <label class="login-view__field">
-          <span>Email</span>
+          <span>{{ t('login.email') }}</span>
           <BaseInput v-model="email" type="email" required placeholder="you@example.com" />
         </label>
         <label class="login-view__field">
-          <span>Password</span>
+          <span>{{ t('login.password') }}</span>
           <BaseInput v-model="password" type="password" required placeholder="••••••••" />
         </label>
 
         <p v-if="error" class="login-view__error">{{ error }}</p>
 
         <BaseButton type="submit" :disabled="isSubmitting" class="login-view__submit">
-          {{ isSubmitting ? 'Logging in...' : 'Log in' }}
+          {{ isSubmitting ? t('login.loggingIn') : t('login.logIn') }}
         </BaseButton>
       </form>
     </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Product } from '../../types/product'
 import { useCartStore } from '../../stores/cart'
 import BaseCard from '../base/BaseCard.vue'
@@ -10,6 +11,7 @@ const props = defineProps<{
   product: Product
 }>()
 
+const { t } = useI18n()
 const cartStore = useCartStore()
 const justAdded = ref(false)
 
@@ -40,7 +42,7 @@ function handleAddToCart(): void {
     <p class="product-card__description">{{ product.description }}</p>
     <div class="product-card__footer">
       <span class="product-card__price">{{ formattedPrice }}</span>
-      <BaseButton @click="handleAddToCart">{{ justAdded ? 'Added ✓' : 'Add to cart' }}</BaseButton>
+      <BaseButton @click="handleAddToCart">{{ justAdded ? t('product.added') : t('product.addToCart') }}</BaseButton>
     </div>
   </BaseCard>
 </template>
@@ -73,8 +75,9 @@ function handleAddToCart(): void {
 
 .product-card__footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-xs);
   margin-top: var(--space-sm);
 }
 
