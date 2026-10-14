@@ -15,8 +15,12 @@ const { theme, toggleTheme } = useTheme()
 
 const navLinks = computed(() => [
   { label: t('nav.catalog'), to: '/' },
-  { label: t('nav.admin'), to: '/admin' },
-  { label: t('nav.adminCatalog'), to: '/admin/catalog' },
+  ...(authStore.isAdmin
+    ? [
+        { label: t('nav.admin'), to: '/admin' },
+        { label: t('nav.adminCatalog'), to: '/admin/catalog' },
+      ]
+    : []),
 ])
 
 const LOCALE_FLAGS: Record<SupportedLocale, { flag: string; label: string }> = {
