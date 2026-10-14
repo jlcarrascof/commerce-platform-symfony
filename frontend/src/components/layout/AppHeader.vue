@@ -284,7 +284,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 }
 
 .app-header__locale-option--active {
-  color: var(--color-accent-600);
+  color: var(--color-accent-text);
   font-weight: 600;
 }
 

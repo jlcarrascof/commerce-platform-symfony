@@ -8,6 +8,7 @@
   --color-neutral-100: #f1f5f9;
   --color-neutral-200: #e2e8f0;
   --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
   --color-neutral-500: #64748b;
   --color-neutral-700: #334155;
   --color-neutral-900: #0f172a;
@@ -31,6 +32,11 @@
   --color-text: var(--color-neutral-700);
   --color-text-heading: var(--color-neutral-900);
   --color-text-muted: var(--color-neutral-500);
+
+  /* Accent-colored text on a surface (active nav links, totals, active
+     tabs, etc.) — distinct from --color-accent-600, which stays dark in
+     both themes since it also backs solid buttons with white text. */
+  --color-accent-text: var(--color-accent-600);
 
   /* Spacing scale */
   --space-xs: 4px;
@@ -60,7 +66,8 @@
     --color-border: var(--color-neutral-700);
     --color-text: var(--color-neutral-300);
     --color-text-heading: var(--color-neutral-0);
-    --color-text-muted: var(--color-neutral-500);
+    --color-text-muted: var(--color-neutral-400);
+    --color-accent-text: var(--color-accent-300);
     --glass-bg: rgba(30, 41, 59, 0.85);
     --glass-border: rgba(148, 163, 184, 0.18);
   }
@@ -72,7 +79,8 @@
   --color-border: var(--color-neutral-700);
   --color-text: var(--color-neutral-300);
   --color-text-heading: var(--color-neutral-0);
-  --color-text-muted: var(--color-neutral-500);
+  --color-text-muted: var(--color-neutral-400);
+  --color-accent-text: var(--color-accent-300);
   --glass-bg: rgba(30, 41, 59, 0.85);
   --glass-border: rgba(148, 163, 184, 0.18);
 }
@@ -84,6 +92,7 @@
   --color-text: var(--color-neutral-700);
   --color-text-heading: var(--color-neutral-900);
   --color-text-muted: var(--color-neutral-500);
+  --color-accent-text: var(--color-accent-600);
   --glass-bg: rgba(255, 255, 255, 0.62);
   --glass-border: rgba(255, 255, 255, 0.6);
 }

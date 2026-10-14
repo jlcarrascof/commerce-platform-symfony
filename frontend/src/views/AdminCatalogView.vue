@@ -229,8 +229,8 @@ async function restoreItem(item: CatalogItem): Promise<void> {
 }
 
 .admin-page__tab--active {
-  color: var(--color-accent-600);
-  border-color: var(--color-accent-600);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent-text);
 }
 
 .admin-page__filter {

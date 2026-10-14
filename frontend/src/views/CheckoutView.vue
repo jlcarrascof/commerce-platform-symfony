@@ -159,18 +159,18 @@ async function placeOrder(): Promise<void> {
   font-variant-numeric: tabular-nums;
 }
 
-.checkout-table__description {
+.checkout-table td.checkout-table__description {
   text-align: left;
   font-weight: 500;
   color: var(--color-text-heading);
 }
 
-.checkout-table__line-total {
+.checkout-table td.checkout-table__line-total {
   font-weight: 700;
   color: var(--color-text-heading);
 }
 
-.checkout-table__total-label {
+.checkout-table td.checkout-table__total-label {
   padding-top: var(--space-md);
   border-bottom: none;
   text-align: right;
@@ -178,13 +178,13 @@ async function placeOrder(): Promise<void> {
   color: var(--color-text-heading);
 }
 
-.checkout-table__total-value {
+.checkout-table td.checkout-table__total-value {
   padding-top: var(--space-md);
   border-bottom: none;
   text-align: right;
   font-weight: 800;
   font-size: 20px;
-  color: var(--color-accent-600);
+  color: var(--color-accent-text);
   font-variant-numeric: tabular-nums;
 }
 
