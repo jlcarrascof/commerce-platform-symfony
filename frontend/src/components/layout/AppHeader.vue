@@ -141,9 +141,17 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   color: var(--color-text);
 }
 
+:root[data-theme='dark'] .app-header__nav a.router-link-active {
+  color: var(--color-accent-300);
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .app-header__nav a:not(.router-link-active) {
     color: var(--color-text);
+  }
+
+  :root:not([data-theme='light']) .app-header__nav a.router-link-active {
+    color: var(--color-accent-300);
   }
 }
 
