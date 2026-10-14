@@ -1,0 +1,102 @@
+{
+  "nav": {
+    "catalog": "Catalog",
+    "admin": "Admin",
+    "adminCatalog": "Catalog admin",
+    "cart": "Cart",
+    "logIn": "Log in",
+    "logOut": "Log out"
+  },
+  "home": {
+    "title": "Catalog",
+    "loading": "Loading products...",
+    "error": "Could not load the catalog. Please try again later.",
+    "empty": "No products available yet."
+  },
+  "product": {
+    "addToCart": "Add to cart",
+    "added": "Added ✓"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty.",
+    "remove": "Remove",
+    "total": "Total",
+    "checkout": "Proceed to checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "orderSuccess": "Order #{id} created successfully.",
+    "backToCatalog": "Back to catalog",
+    "emptyCart": "Your cart is empty. Add some products before checking out.",
+    "qty": "Qty",
+    "description": "Description",
+    "unitPrice": "Unit price",
+    "total": "Total",
+    "placeOrder": "Place order",
+    "placingOrder": "Placing order...",
+    "genericError": "Could not place the order. Please try again."
+  },
+  "login": {
+    "brandTitle": "Commerce Platform",
+    "brandTagline": "Manage your inventory, track orders and keep your catalog moving — all in one place.",
+    "welcomeBack": "Welcome back",
+    "subtitle": "Log in to continue to your account.",
+    "email": "Email",
+    "password": "Password",
+    "logIn": "Log in",
+    "loggingIn": "Logging in...",
+    "invalidCredentials": "Invalid email or password.",
+    "tooManyAttempts": "Too many login attempts. Please wait a minute and try again."
+  },
+  "admin": {
+    "orders": "Orders",
+    "allStatuses": "All statuses",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "loading": "Loading orders...",
+    "noMatch": "No orders match this filter.",
+    "colId": "ID",
+    "colCustomer": "Customer",
+    "colStatus": "Status",
+    "colCreated": "Created",
+    "colTotal": "Total",
+    "colActions": "Actions",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "hideHistory": "Hide history",
+    "history": "History",
+    "refresh": "Refresh",
+    "loadingHistory": "Loading history...",
+    "noHistory": "No status changes recorded yet.",
+    "historyBy": "by",
+    "showing": "Showing {from}–{to} of {total}",
+    "previous": "Previous",
+    "pageOf": "Page {page} of {total}",
+    "next": "Next"
+  },
+  "adminCatalog": {
+    "title": "Catalog",
+    "products": "Products",
+    "categories": "Categories",
+    "active": "Active",
+    "deleted": "Deleted",
+    "loading": "Loading catalog...",
+    "noDeletedItems": "No deleted items.",
+    "noItemsYet": "No items yet.",
+    "colName": "Name",
+    "colCategory": "Category",
+    "colSlug": "Slug",
+    "colPrice": "Price",
+    "colStock": "Stock",
+    "colActions": "Actions",
+    "delete": "Delete",
+    "restore": "Restore",
+    "deleteError": "Could not delete this item.",
+    "restoreError": "Could not restore this item."
+  },
+  "common": {
+    "genericLoadError": "Could not load. Please try again later."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "nav": {
+    "catalog": "Catálogo",
+    "admin": "Admin",
+    "adminCatalog": "Admin de catálogo",
+    "cart": "Carrito",
+    "logIn": "Iniciar sesión",
+    "logOut": "Cerrar sesión"
+  },
+  "home": {
+    "title": "Catálogo",
+    "loading": "Cargando productos...",
+    "error": "No se pudo cargar el catálogo. Intentá de nuevo más tarde.",
+    "empty": "Todavía no hay productos disponibles."
+  },
+  "product": {
+    "addToCart": "Agregar al carrito",
+    "added": "Agregado ✓"
+  },
+  "cart": {
+    "title": "Carrito",
+    "empty": "Tu carrito está vacío.",
+    "remove": "Quitar",
+    "total": "Total",
+    "checkout": "Continuar al checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "orderSuccess": "Pedido #{id} creado con éxito.",
+    "backToCatalog": "Volver al catálogo",
+    "emptyCart": "Tu carrito está vacío. Agregá productos antes de pagar.",
+    "qty": "Cant.",
+    "description": "Descripción",
+    "unitPrice": "Precio unitario",
+    "total": "Total",
+    "placeOrder": "Confirmar pedido",
+    "placingOrder": "Procesando pedido...",
+    "genericError": "No se pudo crear el pedido. Intentá de nuevo."
+  },
+  "login": {
+    "brandTitle": "Commerce Platform",
+    "brandTagline": "Gestioná tu inventario, seguí tus pedidos y mantené tu catálogo en movimiento — todo en un solo lugar.",
+    "welcomeBack": "Bienvenido de nuevo",
+    "subtitle": "Iniciá sesión para continuar a tu cuenta.",
+    "email": "Email",
+    "password": "Contraseña",
+    "logIn": "Iniciar sesión",
+    "loggingIn": "Iniciando sesión...",
+    "invalidCredentials": "Email o contraseña inválidos.",
+    "tooManyAttempts": "Demasiados intentos de inicio de sesión. Esperá un minuto e intentá de nuevo."
+  },
+  "admin": {
+    "orders": "Pedidos",
+    "allStatuses": "Todos los estados",
+    "pending": "Pendiente",
+    "confirmed": "Confirmado",
+    "cancelled": "Cancelado",
+    "loading": "Cargando pedidos...",
+    "noMatch": "Ningún pedido coincide con este filtro.",
+    "colId": "ID",
+    "colCustomer": "Cliente",
+    "colStatus": "Estado",
+    "colCreated": "Creado",
+    "colTotal": "Total",
+    "colActions": "Acciones",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "hideHistory": "Ocultar historial",
+    "history": "Historial",
+    "refresh": "Actualizar",
+    "loadingHistory": "Cargando historial...",
+    "noHistory": "Todavía no hay cambios de estado registrados.",
+    "historyBy": "por",
+    "showing": "Mostrando {from}–{to} de {total}",
+    "previous": "Anterior",
+    "pageOf": "Página {page} de {total}",
+    "next": "Siguiente"
+  },
+  "adminCatalog": {
+    "title": "Catálogo",
+    "products": "Productos",
+    "categories": "Categorías",
+    "active": "Activos",
+    "deleted": "Eliminados",
+    "loading": "Cargando catálogo...",
+    "noDeletedItems": "No hay elementos eliminados.",
+    "noItemsYet": "Todavía no hay elementos.",
+    "colName": "Nombre",
+    "colCategory": "Categoría",
+    "colSlug": "Slug",
+    "colPrice": "Precio",
+    "colStock": "Stock",
+    "colActions": "Acciones",
+    "delete": "Eliminar",
+    "restore": "Restaurar",
+    "deleteError": "No se pudo eliminar este elemento.",
+    "restoreError": "No se pudo restaurar este elemento."
+  },
+  "common": {
+    "genericLoadError": "No se pudo cargar. Intentá de nuevo más tarde."
+  }
+}
