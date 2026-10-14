@@ -48,9 +48,9 @@
      decorative gradient behind the page (see style.css) so the blur has
      something to show through. Kept subtle on purpose so dense tables
      (admin screens) stay fully legible. */
-  --glass-bg: rgba(255, 255, 255, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-blur: 10px;
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: 14px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -84,6 +84,6 @@
   --color-text: var(--color-neutral-700);
   --color-text-heading: var(--color-neutral-900);
   --color-text-muted: var(--color-neutral-500);
-  --glass-bg: rgba(255, 255, 255, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.6);
 }
