@@ -66,7 +66,7 @@ docker compose exec php php bin/console messenger:consume async -vv
 ```bash
 docker compose exec -e APP_ENV=test php php bin/console doctrine:migrations:migrate --no-interaction
 docker compose exec -e APP_ENV=test php php bin/console cache:pool:clear cache.rate_limiter
-docker compose exec -e APP_ENV=test php php bin/phpunit
+docker compose exec -e APP_ENV=test php php vendor/bin/phpunit
 docker compose exec php php vendor/bin/phpstan analyse
 ```
 

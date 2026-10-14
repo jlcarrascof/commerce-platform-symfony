@@ -40,7 +40,7 @@ jobs:
         run: docker compose exec -T php php vendor/bin/phpstan analyse
 
       - name: PHPUnit
-        run: docker compose exec -T -e APP_ENV=test php php bin/phpunit
+        run: docker compose exec -T -e APP_ENV=test php php vendor/bin/phpunit
 
   frontend:
     name: Frontend (type-check + build)
