@@ -47,7 +47,9 @@
     "logIn": "Log in",
     "loggingIn": "Logging in...",
     "invalidCredentials": "Invalid email or password.",
-    "tooManyAttempts": "Too many login attempts. Please wait a minute and try again."
+    "tooManyAttempts": "Too many login attempts. Please wait a minute and try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "admin": {
     "orders": "Orders",

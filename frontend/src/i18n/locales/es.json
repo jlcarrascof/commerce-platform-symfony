@@ -47,7 +47,9 @@
     "logIn": "Iniciar sesión",
     "loggingIn": "Iniciando sesión...",
     "invalidCredentials": "Email o contraseña inválidos.",
-    "tooManyAttempts": "Demasiados intentos de inicio de sesión. Esperá un minuto e intentá de nuevo."
+    "tooManyAttempts": "Demasiados intentos de inicio de sesión. Esperá un minuto e intentá de nuevo.",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "admin": {
     "orders": "Pedidos",
