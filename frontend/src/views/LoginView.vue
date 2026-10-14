@@ -8,8 +8,8 @@ import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 
 const { t } = useI18n()
-const email = ref('')
-const password = ref('')
+const email = ref('admin@example.com')
+const password = ref('password123')
 const error = ref<string | null>(null)
 const isSubmitting = ref(false)
 const isPasswordVisible = ref(false)
