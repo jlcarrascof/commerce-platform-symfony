@@ -76,7 +76,7 @@ function handleAddToCart(): void {
 .product-card__footer {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: var(--space-xs);
   margin-top: var(--space-sm);
 }
