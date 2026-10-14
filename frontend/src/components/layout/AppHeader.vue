@@ -137,6 +137,16 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   font-weight: 500;
 }
 
+:root[data-theme='dark'] .app-header__nav a:not(.router-link-active) {
+  color: var(--color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-header__nav a:not(.router-link-active) {
+    color: var(--color-text);
+  }
+}
+
 .app-header__nav a.router-link-active {
   color: var(--color-accent-600);
 }
