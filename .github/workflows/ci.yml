@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (PHPStan + PHPUnit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start the Docker stack
+        run: docker compose up -d --build
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in $(seq 1 30); do
+            docker compose exec -T postgres pg_isready -U app && break
+            sleep 1
+          done
+
+      - name: Install PHP dependencies
+        run: docker compose exec -T php composer install --no-interaction --prefer-dist
+
+      - name: Generate a JWT keypair for this run
+        run: docker compose exec -T php php bin/console lexik:jwt:generate-keypair --skip-if-exists
+
+      - name: Create the test database
+        run: docker compose exec -T -e APP_ENV=test php php bin/console doctrine:database:create --no-interaction --if-not-exists
+
+      - name: Run database migrations (dev and test environments)
+        run: |
+          docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction
+          docker compose exec -T -e APP_ENV=test php php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: PHPStan (level 8)
+        run: docker compose exec -T php php vendor/bin/phpstan analyse
+
+      - name: PHPUnit
+        run: docker compose exec -T -e APP_ENV=test php php vendor/bin/phpunit
+
+  frontend:
+    name: Frontend (type-check + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type-check and build
+        working-directory: frontend
+        run: npm run build
