@@ -8,8 +8,10 @@
 
 <style scoped>
 .base-card {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   transition: box-shadow 0.15s ease;

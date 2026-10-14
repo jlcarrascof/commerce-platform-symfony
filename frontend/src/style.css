@@ -14,7 +14,13 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--color-text);
-  background: var(--color-bg);
+  /* Soft accent-colored blobs behind the page so the glassmorphism blur
+     on the header and cards has something visible to show through. */
+  background:
+    radial-gradient(circle at 15% 15%, color-mix(in srgb, var(--color-accent-500) 16%, transparent) 0%, transparent 45%),
+    radial-gradient(circle at 85% 80%, color-mix(in srgb, var(--color-accent-300) 14%, transparent) 0%, transparent 50%),
+    var(--color-bg);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
