@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import apiClient from '../api/client'
 import { useCartStore } from '../stores/cart'
 import BaseCard from '../components/base/BaseCard.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 
+const { t } = useI18n()
 const cartStore = useCartStore()
 const router = useRouter()
 
@@ -42,7 +44,7 @@ async function placeOrder(): Promise<void> {
   } catch (err: any) {
     const backendMessage =
       err.response?.data?.error ?? err.response?.data?.errors?.[0]?.message ?? null
-    error.value = backendMessage ?? 'Could not place the order. Please try again.'
+    error.value = backendMessage ?? t('checkout.genericError')
   } finally {
     isSubmitting.value = false
   }
@@ -52,26 +54,26 @@ async function placeOrder(): Promise<void> {
 <template>
   <section class="checkout-page">
     <BaseCard class="checkout-card">
-      <h1 class="checkout-card__title">Checkout</h1>
+      <h1 class="checkout-card__title">{{ t('checkout.title') }}</h1>
 
       <div v-if="orderId" class="checkout-page__success">
         <span class="checkout-page__success-icon">✓</span>
-        <p class="checkout-page__success-text">Order #{{ orderId }} created successfully.</p>
-        <BaseButton @click="router.push('/')">Back to catalog</BaseButton>
+        <p class="checkout-page__success-text">{{ t('checkout.orderSuccess', { id: orderId }) }}</p>
+        <BaseButton @click="router.push('/')">{{ t('checkout.backToCatalog') }}</BaseButton>
       </div>
 
       <p v-else-if="cartStore.isEmpty" class="checkout-page__message">
-        Your cart is empty. Add some products before checking out.
+        {{ t('checkout.emptyCart') }}
       </p>
 
       <template v-else>
         <table class="checkout-table">
           <thead>
             <tr>
-              <th class="checkout-table__qty">Qty</th>
-              <th class="checkout-table__description">Description</th>
-              <th class="checkout-table__unit-price">Unit price</th>
-              <th class="checkout-table__line-total">Total</th>
+              <th class="checkout-table__qty">{{ t('checkout.qty') }}</th>
+              <th class="checkout-table__description">{{ t('checkout.description') }}</th>
+              <th class="checkout-table__unit-price">{{ t('checkout.unitPrice') }}</th>
+              <th class="checkout-table__line-total">{{ t('checkout.total') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -86,7 +88,7 @@ async function placeOrder(): Promise<void> {
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" class="checkout-table__total-label">Total</td>
+              <td colspan="3" class="checkout-table__total-label">{{ t('checkout.total') }}</td>
               <td class="checkout-table__total-value">{{ formatPrice(cartStore.totalPriceInCents) }}</td>
             </tr>
           </tfoot>
@@ -95,7 +97,7 @@ async function placeOrder(): Promise<void> {
         <p v-if="error" class="checkout-page__error">{{ error }}</p>
 
         <BaseButton :disabled="isSubmitting" class="checkout-page__submit" @click="placeOrder">
-          {{ isSubmitting ? 'Placing order...' : 'Place order' }}
+          {{ isSubmitting ? t('checkout.placingOrder') : t('checkout.placeOrder') }}
         </BaseButton>
       </template>
     </BaseCard>

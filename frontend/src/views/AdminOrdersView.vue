@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
 import type { Order, OrderStatus } from '../types/order'
 import type { AuditLogEntry } from '../types/auditLog'
 import BaseCard from '../components/base/BaseCard.vue'
 import BaseBadge from '../components/base/BaseBadge.vue'
 
+const { t } = useI18n()
 const orders = ref<Order[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -57,7 +59,7 @@ async function fetchOrders(): Promise<void> {
     orders.value = response.data
     totalCount.value = Number(response.headers['x-total-count'] ?? response.data.length)
   } catch {
-    error.value = 'Could not load orders. Please try again later.'
+    error.value = t('common.genericLoadError')
   } finally {
     isLoading.value = false
   }
@@ -127,29 +129,29 @@ async function toggleHistory(order: Order): Promise<void> {
 <template>
   <section class="admin-page">
     <div class="admin-page__header">
-      <h1>Orders</h1>
+      <h1>{{ t('admin.orders') }}</h1>
       <select v-model="statusFilter" class="admin-page__filter">
-        <option value="">All statuses</option>
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="cancelled">Cancelled</option>
+        <option value="">{{ t('admin.allStatuses') }}</option>
+        <option value="pending">{{ t('admin.pending') }}</option>
+        <option value="confirmed">{{ t('admin.confirmed') }}</option>
+        <option value="cancelled">{{ t('admin.cancelled') }}</option>
       </select>
     </div>
 
-    <p v-if="isLoading" class="admin-page__message">Loading orders...</p>
+    <p v-if="isLoading" class="admin-page__message">{{ t('admin.loading') }}</p>
     <p v-else-if="error" class="admin-page__message admin-page__message--error">{{ error }}</p>
-    <p v-else-if="orders.length === 0" class="admin-page__message">No orders match this filter.</p>
+    <p v-else-if="orders.length === 0" class="admin-page__message">{{ t('admin.noMatch') }}</p>
 
     <BaseCard v-else class="admin-page__card">
       <table class="admin-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th class="admin-table__total">Total</th>
-            <th class="admin-table__actions">Actions</th>
+            <th>{{ t('admin.colId') }}</th>
+            <th>{{ t('admin.colCustomer') }}</th>
+            <th>{{ t('admin.colStatus') }}</th>
+            <th>{{ t('admin.colCreated') }}</th>
+            <th class="admin-table__total">{{ t('admin.colTotal') }}</th>
+            <th class="admin-table__actions">{{ t('admin.colActions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -168,7 +170,7 @@ async function toggleHistory(order: Order): Promise<void> {
                   :disabled="pendingActions[order.id]"
                   @click="performAction(order, 'confirm')"
                 >
-                  Confirm
+                  {{ t('admin.confirm') }}
                 </button>
                 <button
                   v-if="order.status !== 'cancelled'"
@@ -177,14 +179,14 @@ async function toggleHistory(order: Order): Promise<void> {
                   :disabled="pendingActions[order.id]"
                   @click="performAction(order, 'cancel')"
                 >
-                  Cancel
+                  {{ t('admin.cancel') }}
                 </button>
                 <button
                   type="button"
                   class="admin-table__action"
                   @click="toggleHistory(order)"
                 >
-                  {{ expandedOrderId === order.id ? 'Hide history' : 'History' }}
+                  {{ expandedOrderId === order.id ? t('admin.hideHistory') : t('admin.history') }}
                 </button>
               </td>
             </tr>
@@ -194,23 +196,23 @@ async function toggleHistory(order: Order): Promise<void> {
             <tr v-if="expandedOrderId === order.id">
               <td colspan="6" class="admin-table__history">
                 <div class="admin-table__history-header">
-                  <span class="admin-table__history-title">History</span>
+                  <span class="admin-table__history-title">{{ t('admin.history') }}</span>
                   <button
                     type="button"
                     class="admin-table__history-refresh"
                     :disabled="auditLoading[order.id]"
                     @click="refreshHistory(order.id)"
                   >
-                    Refresh
+                    {{ t('admin.refresh') }}
                   </button>
                 </div>
-                <p v-if="auditLoading[order.id]" class="admin-table__history-message">Loading history...</p>
+                <p v-if="auditLoading[order.id]" class="admin-table__history-message">{{ t('admin.loadingHistory') }}</p>
                 <p v-else-if="!auditLogs[order.id] || auditLogs[order.id].length === 0" class="admin-table__history-message">
-                  No status changes recorded yet.
+                  {{ t('admin.noHistory') }}
                 </p>
                 <ul v-else class="admin-table__history-list">
                   <li v-for="entry in auditLogs[order.id]" :key="entry.id">
-                    <strong>{{ entry.action }}</strong> by {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
+                    <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
                   </li>
                 </ul>
               </td>
@@ -222,12 +224,12 @@ async function toggleHistory(order: Order): Promise<void> {
 
     <div v-if="!isLoading && !error && totalCount > 0" class="admin-page__pagination">
       <span class="admin-page__pagination-info">
-        Showing {{ (page - 1) * limit + 1 }}–{{ Math.min(page * limit, totalCount) }} of {{ totalCount }}
+        {{ t('admin.showing', { from: (page - 1) * limit + 1, to: Math.min(page * limit, totalCount), total: totalCount }) }}
       </span>
       <div class="admin-page__pagination-controls">
-        <button type="button" :disabled="page === 1" @click="goToPage(page - 1)">Previous</button>
-        <span>Page {{ page }} of {{ Math.max(1, Math.ceil(totalCount / limit)) }}</span>
-        <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">Next</button>
+        <button type="button" :disabled="page === 1" @click="goToPage(page - 1)">{{ t('admin.previous') }}</button>
+        <span>{{ t('admin.pageOf', { page, total: Math.max(1, Math.ceil(totalCount / limit)) }) }}</span>
+        <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">{{ t('admin.next') }}</button>
       </div>
     </div>
   </section>

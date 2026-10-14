@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
 import type { Product } from '../types/product'
 import type { Category } from '../types/category'
@@ -8,6 +9,7 @@ import BaseCard from '../components/base/BaseCard.vue'
 type Tab = 'products' | 'categories'
 type CatalogItem = Product | Category
 
+const { t } = useI18n()
 const activeTab = ref<Tab>('products')
 const showDeleted = ref(false)
 
@@ -61,7 +63,7 @@ async function refresh(): Promise<void> {
   try {
     await Promise.all([fetchActive(), fetchDeleted()])
   } catch {
-    error.value = 'Could not load the catalog. Please try again later.'
+    error.value = t('common.genericLoadError')
   } finally {
     isLoading.value = false
   }
@@ -83,7 +85,7 @@ async function deleteItem(item: CatalogItem): Promise<void> {
     await apiClient.delete(`/${resource}/${item.id}`)
     await refresh()
   } catch (err: any) {
-    rowErrors[item.id] = err.response?.data?.message ?? 'Could not delete this item.'
+    rowErrors[item.id] = err.response?.data?.message ?? t('adminCatalog.deleteError')
   } finally {
     pendingActions[item.id] = false
   }
@@ -99,7 +101,7 @@ async function restoreItem(item: CatalogItem): Promise<void> {
     await apiClient.post(`/${resource}/${item.id}/restore`)
     await refresh()
   } catch (err: any) {
-    rowErrors[item.id] = err.response?.data?.message ?? 'Could not restore this item.'
+    rowErrors[item.id] = err.response?.data?.message ?? t('adminCatalog.restoreError')
   } finally {
     pendingActions[item.id] = false
   }
@@ -109,7 +111,7 @@ async function restoreItem(item: CatalogItem): Promise<void> {
 <template>
   <section class="admin-page">
     <div class="admin-page__header">
-      <h1>Catalog</h1>
+      <h1>{{ t('adminCatalog.title') }}</h1>
       <div class="admin-page__tabs">
         <button
           type="button"
@@ -117,7 +119,7 @@ async function restoreItem(item: CatalogItem): Promise<void> {
           :class="{ 'admin-page__tab--active': activeTab === 'products' }"
           @click="activeTab = 'products'"
         >
-          Products
+          {{ t('adminCatalog.products') }}
         </button>
         <button
           type="button"
@@ -125,31 +127,31 @@ async function restoreItem(item: CatalogItem): Promise<void> {
           :class="{ 'admin-page__tab--active': activeTab === 'categories' }"
           @click="activeTab = 'categories'"
         >
-          Categories
+          {{ t('adminCatalog.categories') }}
         </button>
       </div>
       <select v-model="showDeleted" class="admin-page__filter">
-        <option :value="false">Active</option>
-        <option :value="true">Deleted</option>
+        <option :value="false">{{ t('adminCatalog.active') }}</option>
+        <option :value="true">{{ t('adminCatalog.deleted') }}</option>
       </select>
     </div>
 
-    <p v-if="isLoading" class="admin-page__message">Loading catalog...</p>
+    <p v-if="isLoading" class="admin-page__message">{{ t('adminCatalog.loading') }}</p>
     <p v-else-if="error" class="admin-page__message admin-page__message--error">{{ error }}</p>
     <p v-else-if="visibleItems.length === 0" class="admin-page__message">
-      {{ showDeleted ? 'No deleted items.' : 'No items yet.' }}
+      {{ showDeleted ? t('adminCatalog.noDeletedItems') : t('adminCatalog.noItemsYet') }}
     </p>
 
     <BaseCard v-else class="admin-page__card">
       <table class="admin-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th v-if="activeTab === 'products'">Category</th>
-            <th v-else>Slug</th>
-            <th v-if="activeTab === 'products'">Price</th>
-            <th v-if="activeTab === 'products'">Stock</th>
-            <th class="admin-table__actions">Actions</th>
+            <th>{{ t('adminCatalog.colName') }}</th>
+            <th v-if="activeTab === 'products'">{{ t('adminCatalog.colCategory') }}</th>
+            <th v-else>{{ t('adminCatalog.colSlug') }}</th>
+            <th v-if="activeTab === 'products'">{{ t('adminCatalog.colPrice') }}</th>
+            <th v-if="activeTab === 'products'">{{ t('adminCatalog.colStock') }}</th>
+            <th class="admin-table__actions">{{ t('adminCatalog.colActions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -168,7 +170,7 @@ async function restoreItem(item: CatalogItem): Promise<void> {
                   :disabled="pendingActions[item.id]"
                   @click="deleteItem(item)"
                 >
-                  Delete
+                  {{ t('adminCatalog.delete') }}
                 </button>
                 <button
                   v-else
@@ -177,7 +179,7 @@ async function restoreItem(item: CatalogItem): Promise<void> {
                   :disabled="pendingActions[item.id]"
                   @click="restoreItem(item)"
                 >
-                  Restore
+                  {{ t('adminCatalog.restore') }}
                 </button>
               </td>
             </tr>

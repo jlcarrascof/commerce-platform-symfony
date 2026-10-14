@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
 import type { Product } from '../types/product'
 import ProductGrid from '../components/catalog/ProductGrid.vue'
+
+const { t } = useI18n()
 
 const products = ref<Product[]>([])
 const isLoading = ref(true)
@@ -13,7 +16,7 @@ onMounted(async () => {
     const response = await apiClient.get<Product[]>('/products')
     products.value = response.data
   } catch {
-    error.value = 'Could not load the catalog. Please try again later.'
+    error.value = t('home.error')
   } finally {
     isLoading.value = false
   }
@@ -22,11 +25,11 @@ onMounted(async () => {
 
 <template>
   <section class="catalog-page">
-    <h1>Catalog</h1>
+    <h1>{{ t('home.title') }}</h1>
 
-    <p v-if="isLoading" class="catalog-page__message">Loading products...</p>
+    <p v-if="isLoading" class="catalog-page__message">{{ t('home.loading') }}</p>
     <p v-else-if="error" class="catalog-page__message catalog-page__message--error">{{ error }}</p>
-    <p v-else-if="products.length === 0" class="catalog-page__message">No products available yet.</p>
+    <p v-else-if="products.length === 0" class="catalog-page__message">{{ t('home.empty') }}</p>
     <ProductGrid v-else :products="products" />
   </section>
 </template>
