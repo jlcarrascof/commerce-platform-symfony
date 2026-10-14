@@ -26,8 +26,8 @@ withDefaults(
 }
 
 .base-badge--neutral {
-  background: var(--color-surface);
-  color: var(--color-text-muted);
+  padding: 2px 0;
+  color: var(--color-text);
 }
 
 .base-badge--success {

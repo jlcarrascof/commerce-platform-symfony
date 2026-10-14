@@ -20,11 +20,26 @@ class CategoryController
     }
 
     #[Route('/api/categories', name: 'category_list', methods: ['GET'])]
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
-        $categories = $this->entityManager->getRepository(Category::class)->findAll();
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
 
-        return new JsonResponse(array_map($this->serialize(...), $categories));
+        $qb = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
+            ->orderBy('c.name', 'ASC');
+
+        $totalCount = (int) (clone $qb)->select('COUNT(c.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+        $categories = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        $response = new JsonResponse(array_map($this->serialize(...), $categories));
+        $response->headers->set('X-Total-Count', (string) $totalCount);
+
+        return $response;
     }
 
     #[Route('/api/categories', name: 'category_create', methods: ['POST'])]
@@ -67,20 +82,32 @@ class CategoryController
 
     #[Route('/api/categories/deleted', name: 'category_list_deleted', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function listDeleted(): JsonResponse
+    public function listDeleted(Request $request): JsonResponse
     {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+
         $filters = $this->entityManager->getFilters();
         $filters->disable('soft_deleteable');
 
-        $categories = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
+        $qb = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
             ->andWhere('c.deletedAt IS NOT NULL')
-            ->orderBy('c.deletedAt', 'DESC')
+            ->orderBy('c.deletedAt', 'DESC');
+
+        $totalCount = (int) (clone $qb)->select('COUNT(c.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+
+        $categories = $qb
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
         $filters->enable('soft_deleteable');
 
-        return new JsonResponse(array_map($this->serialize(...), $categories));
+        $response = new JsonResponse(array_map($this->serialize(...), $categories));
+        $response->headers->set('X-Total-Count', (string) $totalCount);
+
+        return $response;
     }
 
     #[Route('/api/categories/{id}/restore', name: 'category_restore', methods: ['POST'])]

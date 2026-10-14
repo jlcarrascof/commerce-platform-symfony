@@ -10,7 +10,7 @@
   "home": {
     "title": "Catálogo",
     "loading": "Cargando productos...",
-    "error": "No se pudo cargar el catálogo. Intentá de nuevo más tarde.",
+    "error": "No se pudo cargar el catálogo. Inténtalo de nuevo más tarde.",
     "empty": "Todavía no hay productos disponibles."
   },
   "product": {
@@ -28,26 +28,28 @@
     "title": "Checkout",
     "orderSuccess": "Pedido #{id} creado con éxito.",
     "backToCatalog": "Volver al catálogo",
-    "emptyCart": "Tu carrito está vacío. Agregá productos antes de pagar.",
+    "emptyCart": "Tu carrito está vacío. Agrega productos antes de pagar.",
     "qty": "Cant.",
     "description": "Descripción",
     "unitPrice": "Precio unitario",
     "total": "Total",
     "placeOrder": "Confirmar pedido",
     "placingOrder": "Procesando pedido...",
-    "genericError": "No se pudo crear el pedido. Intentá de nuevo."
+    "genericError": "No se pudo crear el pedido. Inténtalo de nuevo."
   },
   "login": {
     "brandTitle": "Commerce Platform",
-    "brandTagline": "Gestioná tu inventario, seguí tus pedidos y mantené tu catálogo en movimiento — todo en un solo lugar.",
+    "brandTagline": "Gestiona tu inventario, da seguimiento a tus pedidos y mantén tu catálogo en movimiento — todo en un solo lugar.",
     "welcomeBack": "Bienvenido de nuevo",
-    "subtitle": "Iniciá sesión para continuar a tu cuenta.",
+    "subtitle": "Inicia sesión para continuar a tu cuenta.",
     "email": "Email",
     "password": "Contraseña",
     "logIn": "Iniciar sesión",
     "loggingIn": "Iniciando sesión...",
     "invalidCredentials": "Email o contraseña inválidos.",
-    "tooManyAttempts": "Demasiados intentos de inicio de sesión. Esperá un minuto e intentá de nuevo."
+    "tooManyAttempts": "Demasiados intentos de inicio de sesión. Espera un minuto e inténtalo de nuevo.",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "admin": {
     "orders": "Pedidos",
@@ -97,6 +99,6 @@
     "restoreError": "No se pudo restaurar este elemento."
   },
   "common": {
-    "genericLoadError": "No se pudo cargar. Intentá de nuevo más tarde."
+    "genericLoadError": "No se pudo cargar. Inténtalo de nuevo más tarde."
   }
 }

@@ -8,10 +8,11 @@ import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 
 const { t } = useI18n()
-const email = ref('')
-const password = ref('')
+const email = ref('admin@example.com')
+const password = ref('password123')
 const error = ref<string | null>(null)
 const isSubmitting = ref(false)
+const isPasswordVisible = ref(false)
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -54,11 +55,43 @@ async function handleSubmit(): Promise<void> {
 
         <label class="login-view__field">
           <span>{{ t('login.email') }}</span>
-          <BaseInput v-model="email" type="email" required placeholder="you@example.com" />
+          <BaseInput v-model="email" type="email" required placeholder="you@example.com">
+            <template #icon>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-10 7L2 7" />
+              </svg>
+            </template>
+          </BaseInput>
         </label>
         <label class="login-view__field">
           <span>{{ t('login.password') }}</span>
-          <BaseInput v-model="password" type="password" required placeholder="••••••••" />
+          <BaseInput
+            v-model="password"
+            :type="isPasswordVisible ? 'text' : 'password'"
+            required
+            placeholder="••••••••"
+          >
+            <template #icon>
+              <button
+                type="button"
+                class="login-view__password-toggle"
+                :aria-label="isPasswordVisible ? t('login.hidePassword') : t('login.showPassword')"
+                @click="isPasswordVisible = !isPasswordVisible"
+              >
+                <svg v-if="isPasswordVisible" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 7 11 7a13.16 13.16 0 0 1-1.67 2.68" />
+                  <path d="M6.61 6.61A13.52 13.52 0 0 0 1 12s4 7 11 7a9.74 9.74 0 0 0 5.39-1.61" />
+                  <path d="M2 2l20 20" />
+                </svg>
+              </button>
+            </template>
+          </BaseInput>
         </label>
 
         <p v-if="error" class="login-view__error">{{ error }}</p>
@@ -91,7 +124,7 @@ async function handleSubmit(): Promise<void> {
 
 .login-view__form {
   width: 100%;
-  max-width: 360px;
+  max-width: 432px;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -128,6 +161,19 @@ async function handleSubmit(): Promise<void> {
 
 .login-view__submit {
   margin-top: var(--space-xs);
+}
+
+.login-view__password-toggle {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.login-view__password-toggle:hover {
+  color: var(--color-text);
 }
 
 @media (min-width: 900px) {

@@ -15,8 +15,12 @@ const { theme, toggleTheme } = useTheme()
 
 const navLinks = computed(() => [
   { label: t('nav.catalog'), to: '/' },
-  { label: t('nav.admin'), to: '/admin' },
-  { label: t('nav.adminCatalog'), to: '/admin/catalog' },
+  ...(authStore.isAdmin
+    ? [
+        { label: t('nav.admin'), to: '/admin' },
+        { label: t('nav.adminCatalog'), to: '/admin/catalog' },
+      ]
+    : []),
 ])
 
 const LOCALE_FLAGS: Record<SupportedLocale, { flag: string; label: string }> = {
@@ -137,6 +141,24 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   font-weight: 500;
 }
 
+:root[data-theme='dark'] .app-header__nav a:not(.router-link-active) {
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .app-header__nav a.router-link-active {
+  color: var(--color-accent-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-header__nav a:not(.router-link-active) {
+    color: var(--color-text);
+  }
+
+  :root:not([data-theme='light']) .app-header__nav a.router-link-active {
+    color: var(--color-accent-300);
+  }
+}
+
 .app-header__nav a.router-link-active {
   color: var(--color-accent-600);
 }
@@ -180,6 +202,24 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   font-size: 14px;
   cursor: pointer;
   padding: 0;
+}
+
+:root[data-theme='dark'] .app-header__session-email {
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .app-header__logout {
+  color: var(--color-accent-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-header__session-email {
+    color: var(--color-text);
+  }
+
+  :root:not([data-theme='light']) .app-header__logout {
+    color: var(--color-accent-300);
+  }
 }
 
 .app-header__locale {
@@ -244,7 +284,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 }
 
 .app-header__locale-option--active {
-  color: var(--color-accent-600);
+  color: var(--color-accent-text);
   font-weight: 600;
 }
 
