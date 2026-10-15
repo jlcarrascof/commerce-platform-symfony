@@ -91,6 +91,21 @@ class UserControllerTest extends WebTestCase
         self::assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
     }
 
+    public function testCreatingAUserWithAShortPasswordFails(): void
+    {
+        $client = static::createClient();
+        $adminToken = $this->loginAs($client, 'admin@example.com');
+
+        $client->request('POST', '/api/users', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => "Bearer $adminToken",
+        ], json_encode(['email' => 'short-pw@example.com', 'password' => 'abc123', 'isAdmin' => true]));
+
+        self::assertSame(422, $client->getResponse()->getStatusCode());
+        $body = json_decode($client->getResponse()->getContent(), true);
+        self::assertSame('password', $body['errors'][0]['field']);
+    }
+
     public function testCreatingACustomerWithoutFullNameFails(): void
     {
         $client = static::createClient();

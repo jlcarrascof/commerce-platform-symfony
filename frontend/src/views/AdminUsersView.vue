@@ -225,7 +225,7 @@ async function submitForm(): Promise<void> {
 
         <label class="user-form__field">
           <span>{{ t('adminUsers.fieldPassword') }}</span>
-          <BaseInput v-model="formPassword" type="password" :required="!editingUser" />
+          <BaseInput v-model="formPassword" type="password" :required="!editingUser" :minlength="8" />
           <small class="user-form__hint">
             {{ editingUser ? t('adminUsers.fieldPasswordHintEdit') : t('adminUsers.fieldPasswordHintCreate') }}
           </small>

@@ -5,6 +5,7 @@ withDefaults(
     type?: string
     required?: boolean
     placeholder?: string
+    minlength?: number
   }>(),
   { type: 'text' },
 )
@@ -23,6 +24,7 @@ defineEmits<{
       :value="modelValue"
       :required="required"
       :placeholder="placeholder"
+      :minlength="minlength"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
     <span v-if="$slots.icon" class="base-input__icon">

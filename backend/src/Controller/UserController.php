@@ -98,6 +98,8 @@ class UserController
         $errors = [];
         if ('' === $password) {
             $errors[] = ['field' => 'password', 'message' => 'Password should not be blank.'];
+        } elseif (strlen($password) < 8) {
+            $errors[] = ['field' => 'password', 'message' => 'Password must be at least 8 characters long.'];
         }
 
         $user = new User($email, '');
@@ -148,6 +150,10 @@ class UserController
 
         if (!$isAdmin && '' === trim($fullName ?? ($customer?->getFullName() ?? ''))) {
             return new JsonResponse(['errors' => [['field' => 'fullName', 'message' => 'Full name is required for customer accounts.']]], 422);
+        }
+
+        if ('' !== $password && strlen($password) < 8) {
+            return new JsonResponse(['errors' => [['field' => 'password', 'message' => 'Password must be at least 8 characters long.']]], 422);
         }
 
         $user->setEmail($email);
