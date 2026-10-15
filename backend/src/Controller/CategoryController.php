@@ -24,9 +24,14 @@ class CategoryController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $search = trim((string) $request->query->get('search', ''));
 
         $qb = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
             ->orderBy('c.name', 'ASC');
+
+        if ('' !== $search) {
+            $qb->andWhere('LOWER(c.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
+        }
 
         $totalCount = (int) (clone $qb)->select('COUNT(c.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
 
@@ -111,6 +116,7 @@ class CategoryController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $search = trim((string) $request->query->get('search', ''));
 
         $filters = $this->entityManager->getFilters();
         $filters->disable('soft_deleteable');
@@ -118,6 +124,10 @@ class CategoryController
         $qb = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
             ->andWhere('c.deletedAt IS NOT NULL')
             ->orderBy('c.deletedAt', 'DESC');
+
+        if ('' !== $search) {
+            $qb->andWhere('LOWER(c.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
+        }
 
         $totalCount = (int) (clone $qb)->select('COUNT(c.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
 

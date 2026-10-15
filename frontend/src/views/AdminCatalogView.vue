@@ -27,6 +27,18 @@ const page = ref(1)
 const limit = 12
 const totalCount = ref(0)
 
+const searchTerm = ref('')
+let searchDebounceId: ReturnType<typeof setTimeout> | undefined
+
+function onSearchInput(value: string): void {
+  searchTerm.value = value
+  clearTimeout(searchDebounceId)
+  searchDebounceId = setTimeout(() => {
+    page.value = 1
+    refresh()
+  }, 300)
+}
+
 const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
 function formatPrice(priceInCents: number): string {
@@ -41,7 +53,9 @@ async function refresh(): Promise<void> {
   const path = showDeleted.value ? `/${resource}/deleted` : `/${resource}`
 
   try {
-    const response = await apiClient.get<CatalogItem[]>(path, { params: { page: page.value, limit } })
+    const response = await apiClient.get<CatalogItem[]>(path, {
+      params: { page: page.value, limit, search: searchTerm.value || undefined },
+    })
     visibleItems.value = response.data
     totalCount.value = Number(response.headers['x-total-count'] ?? response.data.length)
   } catch {
@@ -59,6 +73,7 @@ function goToPage(nextPage: number): void {
 onMounted(refresh)
 watch(activeTab, () => {
   showDeleted.value = false
+  searchTerm.value = ''
 })
 watch([activeTab, showDeleted], () => {
   page.value = 1
@@ -240,8 +255,19 @@ onMounted(fetchAllCategories)
       </select>
     </div>
 
+    <div class="admin-page__search">
+      <BaseInput
+        :model-value="searchTerm"
+        :placeholder="t('adminCatalog.searchPlaceholder')"
+        @update:model-value="onSearchInput"
+      />
+    </div>
+
     <p v-if="isLoading" class="admin-page__message">{{ t('adminCatalog.loading') }}</p>
     <p v-else-if="error" class="admin-page__message admin-page__message--error">{{ error }}</p>
+    <p v-else-if="visibleItems.length === 0 && searchTerm" class="admin-page__message">
+      {{ t('adminCatalog.noSearchResults') }}
+    </p>
     <p v-else-if="visibleItems.length === 0" class="admin-page__message">
       {{ showDeleted ? t('adminCatalog.noDeletedItems') : t('adminCatalog.noItemsYet') }}
     </p>
@@ -480,6 +506,11 @@ onMounted(fetchAllCategories)
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+.admin-page__search {
+  max-width: 320px;
+  margin-bottom: var(--space-md);
 }
 
 .admin-page__message {

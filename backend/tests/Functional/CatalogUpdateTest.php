@@ -147,4 +147,41 @@ class CatalogUpdateTest extends WebTestCase
 
         self::assertSame(Response::HTTP_FORBIDDEN, $client->getResponse()->getStatusCode());
     }
+
+    public function testSearchingProductsByNameFiltersResults(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/api/products', ['search' => 'yoga']);
+        $products = json_decode($client->getResponse()->getContent(), true);
+
+        self::assertNotEmpty($products);
+        foreach ($products as $product) {
+            self::assertStringContainsStringIgnoringCase('yoga', $product['name']);
+        }
+    }
+
+    public function testSearchingProductsIsCaseInsensitiveAndIgnoresUnmatchedTerms(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/api/products', ['search' => 'YOGA']);
+        self::assertNotEmpty(json_decode($client->getResponse()->getContent(), true));
+
+        $client->request('GET', '/api/products', ['search' => 'this-does-not-exist']);
+        self::assertSame([], json_decode($client->getResponse()->getContent(), true));
+    }
+
+    public function testSearchingCategoriesByNameFiltersResults(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/api/categories', ['search' => 'electro']);
+        $categories = json_decode($client->getResponse()->getContent(), true);
+
+        self::assertNotEmpty($categories);
+        foreach ($categories as $category) {
+            self::assertStringContainsStringIgnoringCase('electro', $category['name']);
+        }
+    }
 }

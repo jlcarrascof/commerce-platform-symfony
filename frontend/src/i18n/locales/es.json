@@ -104,7 +104,9 @@
     "editCategory": "Editar categoría",
     "fieldImageUrl": "URL de la imagen",
     "slugHint": "Solo minúsculas, números y guiones (ej. mouse-inalambrico).",
-    "saveError": "No se pudo guardar. Revisa el formulario e inténtalo de nuevo."
+    "saveError": "No se pudo guardar. Revisa el formulario e inténtalo de nuevo.",
+    "searchPlaceholder": "Buscar por nombre...",
+    "noSearchResults": "Ningún elemento coincide con la búsqueda."
   },
   "adminUsers": {
     "title": "Usuarios",

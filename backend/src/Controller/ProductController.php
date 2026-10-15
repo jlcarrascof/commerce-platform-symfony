@@ -32,14 +32,15 @@ class ProductController
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
         $categorySlug = (string) $request->query->get('category', '');
         $sort = (string) $request->query->get('sort', 'name');
+        $search = trim((string) $request->query->get('search', ''));
 
-        $cacheKey = 'products_list_'.md5(serialize([$page, $limit, $categorySlug, $sort]));
+        $cacheKey = 'products_list_'.md5(serialize([$page, $limit, $categorySlug, $sort, $search]));
         $isHit = true;
 
         /** @var array{items: list<array{id: ?int, name: string, slug: string, description: string, priceInCents: int, stock: int, imageUrl: string, category: array{id: ?int, name: string, slug: string}}>, totalCount: int} $payload */
         $payload = $this->productsCache->get(
             $cacheKey,
-            function (ItemInterface $item) use (&$isHit, $categorySlug, $sort, $page, $limit): array {
+            function (ItemInterface $item) use (&$isHit, $categorySlug, $sort, $search, $page, $limit): array {
                 $isHit = false;
                 $item->tag('products');
                 $item->expiresAfter(self::CACHE_TTL_SECONDS);
@@ -49,6 +50,10 @@ class ProductController
 
                 if ('' !== $categorySlug) {
                     $qb->andWhere('c.slug = :categorySlug')->setParameter('categorySlug', $categorySlug);
+                }
+
+                if ('' !== $search) {
+                    $qb->andWhere('LOWER(p.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
                 }
 
                 $sortFields = [
@@ -179,6 +184,7 @@ class ProductController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $search = trim((string) $request->query->get('search', ''));
 
         $filters = $this->entityManager->getFilters();
         $filters->disable('soft_deleteable');
@@ -186,6 +192,10 @@ class ProductController
         $qb = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
             ->andWhere('p.deletedAt IS NOT NULL')
             ->orderBy('p.deletedAt', 'DESC');
+
+        if ('' !== $search) {
+            $qb->andWhere('LOWER(p.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
+        }
 
         $totalCount = (int) (clone $qb)->select('COUNT(p.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
 
