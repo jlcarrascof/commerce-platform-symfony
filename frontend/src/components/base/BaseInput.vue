@@ -6,6 +6,7 @@ withDefaults(
     required?: boolean
     placeholder?: string
     minlength?: number
+    disabled?: boolean
   }>(),
   { type: 'text' },
 )
@@ -25,6 +26,7 @@ defineEmits<{
       :required="required"
       :placeholder="placeholder"
       :minlength="minlength"
+      :disabled="disabled"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
     <span v-if="$slots.icon" class="base-input__icon">
@@ -58,6 +60,12 @@ defineEmits<{
   outline: none;
   border-color: var(--color-accent-500);
   box-shadow: 0 0 0 3px var(--color-accent-100);
+}
+
+.base-input:disabled {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
 }
 
 .base-input__icon {

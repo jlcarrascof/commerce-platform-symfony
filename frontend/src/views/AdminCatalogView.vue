@@ -135,7 +135,6 @@ const formImageUrl = ref('')
 const formCategoryId = ref<number | null>(null)
 const formError = ref<string | null>(null)
 const isSaving = ref(false)
-const isSlugManuallyEdited = ref(false)
 
 function slugify(value: string): string {
   return value
@@ -146,13 +145,7 @@ function slugify(value: string): string {
 }
 
 function handleNameInput(value: string): void {
-  if (!isSlugManuallyEdited.value) {
-    formSlug.value = slugify(value)
-  }
-}
-
-function handleSlugInput(): void {
-  isSlugManuallyEdited.value = true
+  formSlug.value = slugify(value)
 }
 
 function openCreateModal(): void {
@@ -165,7 +158,6 @@ function openCreateModal(): void {
   formImageUrl.value = ''
   formCategoryId.value = activeTab.value === 'products' ? (allCategories.value[0]?.id ?? null) : null
   formError.value = null
-  isSlugManuallyEdited.value = false
   isModalOpen.value = true
 }
 
@@ -182,7 +174,6 @@ function openEditModal(item: CatalogItem): void {
     formCategoryId.value = product.category.id
   }
   formError.value = null
-  isSlugManuallyEdited.value = true
   isModalOpen.value = true
 }
 
@@ -370,7 +361,7 @@ onMounted(fetchAllCategories)
 
         <label class="catalog-form__field">
           <span>{{ t('adminCatalog.colSlug') }}</span>
-          <BaseInput v-model="formSlug" required @update:model-value="handleSlugInput" />
+          <BaseInput v-model="formSlug" required disabled />
           <small class="catalog-form__hint">{{ t('adminCatalog.slugHint') }}</small>
         </label>
 
