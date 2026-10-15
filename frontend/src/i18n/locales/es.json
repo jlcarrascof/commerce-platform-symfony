@@ -12,7 +12,8 @@
     "title": "Catálogo",
     "loading": "Cargando productos...",
     "error": "No se pudo cargar el catálogo. Inténtalo de nuevo más tarde.",
-    "empty": "Todavía no hay productos disponibles."
+    "empty": "Todavía no hay productos disponibles.",
+    "allCategories": "Todas"
   },
   "product": {
     "addToCart": "Agregar al carrito",

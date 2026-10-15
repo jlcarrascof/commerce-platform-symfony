@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
 import type { Product } from '../types/product'
+import type { Category } from '../types/category'
 import ProductGrid from '../components/catalog/ProductGrid.vue'
 
 const { t } = useI18n()
@@ -10,6 +11,9 @@ const { t } = useI18n()
 const products = ref<Product[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+
+const categories = ref<Category[]>([])
+const activeCategory = ref<string>('')
 
 const page = ref(1)
 const limit = 12
@@ -21,7 +25,7 @@ async function refresh(): Promise<void> {
 
   try {
     const response = await apiClient.get<Product[]>('/products', {
-      params: { page: page.value, limit },
+      params: { page: page.value, limit, category: activeCategory.value || undefined },
     })
     products.value = response.data
     totalCount.value = Number(response.headers['x-total-count'] ?? response.data.length)
@@ -37,12 +41,43 @@ function goToPage(nextPage: number): void {
   refresh()
 }
 
+function selectCategory(slug: string): void {
+  activeCategory.value = slug
+  page.value = 1
+  refresh()
+}
+
 onMounted(refresh)
+onMounted(async () => {
+  const response = await apiClient.get<Category[]>('/categories', { params: { limit: 100 } })
+  categories.value = response.data
+})
 </script>
 
 <template>
   <section class="catalog-page">
     <h1>{{ t('home.title') }}</h1>
+
+    <div v-if="categories.length > 0 && categories.length <= 8" class="catalog-page__pills">
+      <button
+        type="button"
+        class="catalog-page__pill"
+        :class="{ 'catalog-page__pill--active': activeCategory === '' }"
+        @click="selectCategory('')"
+      >
+        {{ t('home.allCategories') }}
+      </button>
+      <button
+        v-for="category in categories"
+        :key="category.id"
+        type="button"
+        class="catalog-page__pill"
+        :class="{ 'catalog-page__pill--active': activeCategory === category.slug }"
+        @click="selectCategory(category.slug)"
+      >
+        {{ category.name }}
+      </button>
+    </div>
 
     <p v-if="isLoading" class="catalog-page__message">{{ t('home.loading') }}</p>
     <p v-else-if="error" class="catalog-page__message catalog-page__message--error">{{ error }}</p>
@@ -72,6 +107,37 @@ onMounted(refresh)
 
 .catalog-page h1 {
   margin-bottom: var(--space-lg);
+}
+
+.catalog-page__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.catalog-page__pill {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.catalog-page__pill:hover {
+  border-color: var(--color-accent-500);
+  color: var(--color-text-heading);
+}
+
+.catalog-page__pill--active {
+  background: var(--color-accent-600);
+  border-color: var(--color-accent-600);
+  color: var(--color-neutral-0);
 }
 
 .catalog-page__message {

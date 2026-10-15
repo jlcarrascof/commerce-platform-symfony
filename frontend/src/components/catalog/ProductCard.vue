@@ -42,7 +42,9 @@ function handleAddToCart(): void {
     <p class="product-card__description">{{ product.description }}</p>
     <div class="product-card__footer">
       <span class="product-card__price">{{ formattedPrice }}</span>
-      <BaseButton @click="handleAddToCart">{{ justAdded ? t('product.added') : t('product.addToCart') }}</BaseButton>
+      <BaseButton class="product-card__add" @click="handleAddToCart">
+        {{ justAdded ? t('product.added') : t('product.addToCart') }}
+      </BaseButton>
     </div>
   </BaseCard>
 </template>
@@ -57,9 +59,10 @@ function handleAddToCart(): void {
 .product-card__image {
   width: calc(100% + 2 * var(--space-lg));
   margin: calc(-1 * var(--space-lg)) calc(-1 * var(--space-lg)) 0;
-  height: 160px;
+  height: 190px;
   object-fit: cover;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--color-surface);
 }
 
 .product-card__name {
@@ -76,13 +79,17 @@ function handleAddToCart(): void {
 .product-card__footer {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   margin-top: var(--space-sm);
 }
 
 .product-card__price {
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-text-heading);
+}
+
+.product-card__add {
+  width: 100%;
 }
 </style>

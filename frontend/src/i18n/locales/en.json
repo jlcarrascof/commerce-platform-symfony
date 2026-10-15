@@ -12,7 +12,8 @@
     "title": "Catalog",
     "loading": "Loading products...",
     "error": "Could not load the catalog. Please try again later.",
-    "empty": "No products available yet."
+    "empty": "No products available yet.",
+    "allCategories": "All"
   },
   "product": {
     "addToCart": "Add to cart",
