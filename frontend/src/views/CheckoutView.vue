@@ -79,7 +79,17 @@ async function placeOrder(): Promise<void> {
           <tbody>
             <tr v-for="item in cartStore.items" :key="item.product.id">
               <td class="checkout-table__qty">{{ item.quantity }}</td>
-              <td class="checkout-table__description">{{ item.product.name }}</td>
+              <td class="checkout-table__description">
+                <div class="checkout-table__product">
+                  <img
+                    class="checkout-table__thumb"
+                    :src="item.product.imageUrl"
+                    :alt="item.product.name"
+                    loading="lazy"
+                  />
+                  <span>{{ item.product.name }}</span>
+                </div>
+              </td>
               <td class="checkout-table__unit-price">{{ formatPrice(item.product.priceInCents) }}</td>
               <td class="checkout-table__line-total">
                 {{ formatPrice(item.product.priceInCents * item.quantity) }}
@@ -97,7 +107,7 @@ async function placeOrder(): Promise<void> {
         <p v-if="error" class="checkout-page__error">{{ error }}</p>
 
         <BaseButton :disabled="isSubmitting" class="checkout-page__submit" @click="placeOrder">
-          {{ isSubmitting ? t('checkout.placingOrder') : t('checkout.placeOrder') }}
+          🛍️ {{ isSubmitting ? t('checkout.placingOrder') : t('checkout.placeOrder') }}
         </BaseButton>
       </template>
     </BaseCard>
@@ -163,6 +173,21 @@ async function placeOrder(): Promise<void> {
   text-align: left;
   font-weight: 500;
   color: var(--color-text-heading);
+}
+
+.checkout-table__product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.checkout-table__thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  flex-shrink: 0;
 }
 
 .checkout-table td.checkout-table__line-total {
