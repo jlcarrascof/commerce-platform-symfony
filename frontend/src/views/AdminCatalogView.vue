@@ -467,6 +467,11 @@ onMounted(fetchAllCategories)
   border-color: var(--color-accent-text);
 }
 
+.admin-page__add {
+  font-size: 13px;
+  padding: var(--space-xs) var(--space-md);
+}
+
 .admin-page__filter {
   font-family: var(--font-sans);
   font-size: 14px;
