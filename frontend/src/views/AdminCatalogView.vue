@@ -5,6 +5,9 @@ import apiClient from '../api/client'
 import type { Product } from '../types/product'
 import type { Category } from '../types/category'
 import BaseCard from '../components/base/BaseCard.vue'
+import BaseModal from '../components/base/BaseModal.vue'
+import BaseInput from '../components/base/BaseInput.vue'
+import BaseButton from '../components/base/BaseButton.vue'
 
 type Tab = 'products' | 'categories'
 type CatalogItem = Product | Category
@@ -93,6 +96,117 @@ async function restoreItem(item: CatalogItem): Promise<void> {
     pendingActions[item.id] = false
   }
 }
+
+// Create / edit modal
+const allCategories = ref<Category[]>([])
+
+async function fetchAllCategories(): Promise<void> {
+  const response = await apiClient.get<Category[]>('/categories', { params: { limit: 100 } })
+  allCategories.value = response.data
+}
+
+const isModalOpen = ref(false)
+const editingItem = ref<CatalogItem | null>(null)
+const formName = ref('')
+const formSlug = ref('')
+const formDescription = ref('')
+const formPrice = ref('')
+const formStock = ref('')
+const formImageUrl = ref('')
+const formCategoryId = ref<number | null>(null)
+const formError = ref<string | null>(null)
+const isSaving = ref(false)
+const isSlugManuallyEdited = ref(false)
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function handleNameInput(value: string): void {
+  if (!isSlugManuallyEdited.value) {
+    formSlug.value = slugify(value)
+  }
+}
+
+function handleSlugInput(): void {
+  isSlugManuallyEdited.value = true
+}
+
+function openCreateModal(): void {
+  editingItem.value = null
+  formName.value = ''
+  formSlug.value = ''
+  formDescription.value = ''
+  formPrice.value = ''
+  formStock.value = ''
+  formImageUrl.value = ''
+  formCategoryId.value = activeTab.value === 'products' ? (allCategories.value[0]?.id ?? null) : null
+  formError.value = null
+  isSlugManuallyEdited.value = false
+  isModalOpen.value = true
+}
+
+function openEditModal(item: CatalogItem): void {
+  editingItem.value = item
+  formName.value = item.name
+  formSlug.value = item.slug
+  if (activeTab.value === 'products') {
+    const product = item as Product
+    formDescription.value = product.description
+    formPrice.value = (product.priceInCents / 100).toFixed(2)
+    formStock.value = String(product.stock)
+    formImageUrl.value = product.imageUrl
+    formCategoryId.value = product.category.id
+  }
+  formError.value = null
+  isSlugManuallyEdited.value = true
+  isModalOpen.value = true
+}
+
+async function submitForm(): Promise<void> {
+  formError.value = null
+  isSaving.value = true
+
+  const resource = activeTab.value === 'products' ? 'products' : 'categories'
+  const payload: Record<string, unknown> =
+    activeTab.value === 'products'
+      ? {
+          name: formName.value,
+          slug: formSlug.value,
+          description: formDescription.value,
+          priceInCents: Math.round(Number(formPrice.value) * 100),
+          stock: Number(formStock.value),
+          imageUrl: formImageUrl.value,
+          categoryId: formCategoryId.value,
+        }
+      : {
+          name: formName.value,
+          slug: formSlug.value,
+        }
+
+  try {
+    if (editingItem.value) {
+      await apiClient.put(`/${resource}/${editingItem.value.id}`, payload)
+    } else {
+      await apiClient.post(`/${resource}`, payload)
+    }
+    isModalOpen.value = false
+    await refresh()
+    if (resource === 'categories') {
+      await fetchAllCategories()
+    }
+  } catch (err: any) {
+    formError.value = err.response?.data?.errors?.[0]?.message ?? err.response?.data?.message ?? t('adminCatalog.saveError')
+  } finally {
+    isSaving.value = false
+  }
+}
+
+onMounted(fetchAllCategories)
 </script>
 
 <template>
@@ -117,6 +231,9 @@ async function restoreItem(item: CatalogItem): Promise<void> {
           {{ t('adminCatalog.categories') }}
         </button>
       </div>
+      <BaseButton class="admin-page__add" @click="openCreateModal">
+        {{ activeTab === 'products' ? t('adminCatalog.addProduct') : t('adminCatalog.addCategory') }}
+      </BaseButton>
       <select v-model="showDeleted" class="admin-page__filter">
         <option :value="false">{{ t('adminCatalog.active') }}</option>
         <option :value="true">{{ t('adminCatalog.deleted') }}</option>
@@ -150,15 +267,19 @@ async function restoreItem(item: CatalogItem): Promise<void> {
               <td v-if="activeTab === 'products'" data-label="Price">{{ formatPrice((item as Product).priceInCents) }}</td>
               <td v-if="activeTab === 'products'" data-label="Stock">{{ (item as Product).stock }}</td>
               <td data-label="Actions" class="admin-table__actions">
-                <button
-                  v-if="!showDeleted"
-                  type="button"
-                  class="admin-table__action admin-table__action--cancel"
-                  :disabled="pendingActions[item.id]"
-                  @click="deleteItem(item)"
-                >
-                  {{ t('adminCatalog.delete') }}
-                </button>
+                <template v-if="!showDeleted">
+                  <button type="button" class="admin-table__action" @click="openEditModal(item)">
+                    {{ t('common.edit') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="admin-table__action admin-table__action--cancel"
+                    :disabled="pendingActions[item.id]"
+                    @click="deleteItem(item)"
+                  >
+                    {{ t('adminCatalog.delete') }}
+                  </button>
+                </template>
                 <button
                   v-else
                   type="button"
@@ -190,6 +311,75 @@ async function restoreItem(item: CatalogItem): Promise<void> {
         <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">{{ t('admin.next') }}</button>
       </div>
     </div>
+
+    <BaseModal
+      v-model="isModalOpen"
+      :title="
+        activeTab === 'products'
+          ? editingItem
+            ? t('adminCatalog.editProduct')
+            : t('adminCatalog.addProduct')
+          : editingItem
+            ? t('adminCatalog.editCategory')
+            : t('adminCatalog.addCategory')
+      "
+    >
+      <form class="catalog-form" @submit.prevent="submitForm">
+        <label class="catalog-form__field">
+          <span>{{ t('adminCatalog.colName') }}</span>
+          <BaseInput v-model="formName" required @update:model-value="handleNameInput" />
+        </label>
+
+        <label class="catalog-form__field">
+          <span>{{ t('adminCatalog.colSlug') }}</span>
+          <BaseInput v-model="formSlug" required @update:model-value="handleSlugInput" />
+          <small class="catalog-form__hint">{{ t('adminCatalog.slugHint') }}</small>
+        </label>
+
+        <template v-if="activeTab === 'products'">
+          <label class="catalog-form__field">
+            <span>{{ t('checkout.description') }}</span>
+            <textarea v-model="formDescription" class="catalog-form__textarea" required rows="3"></textarea>
+          </label>
+
+          <div class="catalog-form__row">
+            <label class="catalog-form__field">
+              <span>{{ t('adminCatalog.colPrice') }}</span>
+              <BaseInput v-model="formPrice" type="number" required />
+            </label>
+            <label class="catalog-form__field">
+              <span>{{ t('adminCatalog.colStock') }}</span>
+              <BaseInput v-model="formStock" type="number" required />
+            </label>
+          </div>
+
+          <label class="catalog-form__field">
+            <span>{{ t('adminCatalog.fieldImageUrl') }}</span>
+            <BaseInput v-model="formImageUrl" required placeholder="https://..." />
+          </label>
+
+          <label class="catalog-form__field">
+            <span>{{ t('adminCatalog.colCategory') }}</span>
+            <select v-model.number="formCategoryId" class="catalog-form__select">
+              <option v-for="category in allCategories" :key="category.id" :value="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+          </label>
+        </template>
+
+        <p v-if="formError" class="catalog-form__error">{{ formError }}</p>
+      </form>
+
+      <template #footer>
+        <BaseButton variant="secondary" :disabled="isSaving" @click="isModalOpen = false">
+          {{ t('common.cancel') }}
+        </BaseButton>
+        <BaseButton :disabled="isSaving" @click="submitForm">
+          {{ isSaving ? (editingItem ? t('common.saving') : t('common.creating')) : (editingItem ? t('common.save') : t('common.create')) }}
+        </BaseButton>
+      </template>
+    </BaseModal>
   </section>
 </template>
 
@@ -199,6 +389,52 @@ async function restoreItem(item: CatalogItem): Promise<void> {
   padding: var(--space-xl);
   max-width: 1400px;
   margin: 0 auto;
+}
+
+.catalog-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.catalog-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.catalog-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 14px;
+  color: var(--color-text-heading);
+}
+
+.catalog-form__textarea,
+.catalog-form__select {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.catalog-form__textarea {
+  resize: vertical;
+}
+
+.catalog-form__hint {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.catalog-form__error {
+  color: var(--color-error-600, #dc2626);
+  font-size: 14px;
+  margin: 0;
 }
 
 .admin-page__header {
