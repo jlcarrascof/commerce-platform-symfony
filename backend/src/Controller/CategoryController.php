@@ -64,6 +64,31 @@ class CategoryController
         return new JsonResponse($this->serialize($category), 201);
     }
 
+    #[Route('/api/categories/{id}', name: 'category_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $category = $this->entityManager->getRepository(Category::class)->find($id);
+
+        if (null === $category) {
+            return new JsonResponse(['message' => 'Category not found.'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $category->setName((string) ($data['name'] ?? $category->getName()));
+        $category->setSlug((string) ($data['slug'] ?? $category->getSlug()));
+
+        $violations = $this->validator->validate($category);
+        if (count($violations) > 0) {
+            return new JsonResponse(['errors' => $this->formatViolations($violations)], 422);
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($category));
+    }
+
     #[Route('/api/categories/{id}', name: 'category_delete', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse

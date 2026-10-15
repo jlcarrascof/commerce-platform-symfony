@@ -117,6 +117,45 @@ class ProductController
         return new JsonResponse($this->serialize($product), 201);
     }
 
+    #[Route('/api/products/{id}', name: 'product_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $product = $this->entityManager->getRepository(Product::class)->find($id);
+
+        if (null === $product) {
+            return new JsonResponse(['message' => 'Product not found.'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $category = isset($data['categoryId'])
+            ? $this->entityManager->getRepository(Category::class)->find($data['categoryId'])
+            : $product->getCategory();
+
+        if (null === $category) {
+            return new JsonResponse(['errors' => [['field' => 'categoryId', 'message' => 'Category not found.']]], 422);
+        }
+
+        $product->setName((string) ($data['name'] ?? $product->getName()));
+        $product->setSlug((string) ($data['slug'] ?? $product->getSlug()));
+        $product->setDescription((string) ($data['description'] ?? $product->getDescription()));
+        $product->setPriceInCents((int) ($data['priceInCents'] ?? $product->getPriceInCents()));
+        $product->setStock((int) ($data['stock'] ?? $product->getStock()));
+        $product->setImageUrl((string) ($data['imageUrl'] ?? $product->getImageUrl()));
+        $product->setCategory($category);
+
+        $violations = $this->validator->validate($product);
+        if (count($violations) > 0) {
+            return new JsonResponse(['errors' => $this->formatViolations($violations)], 422);
+        }
+
+        $this->entityManager->flush();
+        $this->productsCache->invalidateTags(['products']);
+
+        return new JsonResponse($this->serialize($product));
+    }
+
     #[Route('/api/products/{id}', name: 'product_delete', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
