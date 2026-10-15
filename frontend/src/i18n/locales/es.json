@@ -106,7 +106,15 @@
     "slugHint": "Solo minúsculas, números y guiones (ej. mouse-inalambrico).",
     "saveError": "No se pudo guardar. Revisa el formulario e inténtalo de nuevo.",
     "searchPlaceholder": "Buscar por nombre...",
-    "noSearchResults": "Ningún elemento coincide con la búsqueda."
+    "noSearchResults": "Ningún elemento coincide con la búsqueda.",
+    "toastProductCreated": "Producto creado.",
+    "toastProductUpdated": "Producto actualizado.",
+    "toastProductDeleted": "Producto eliminado.",
+    "toastProductRestored": "Producto restaurado.",
+    "toastCategoryCreated": "Categoría creada.",
+    "toastCategoryUpdated": "Categoría actualizada.",
+    "toastCategoryDeleted": "Categoría eliminada.",
+    "toastCategoryRestored": "Categoría restaurada."
   },
   "adminUsers": {
     "title": "Usuarios",
@@ -132,7 +140,11 @@
     "restoreError": "No se pudo restaurar este usuario.",
     "selfDeactivateError": "No puedes desactivar tu propia cuenta.",
     "emailTakenError": "Este email ya está en uso.",
-    "fullNameRequiredError": "El nombre completo es obligatorio para cuentas de cliente."
+    "fullNameRequiredError": "El nombre completo es obligatorio para cuentas de cliente.",
+    "toastUserCreated": "Usuario creado.",
+    "toastUserUpdated": "Usuario actualizado.",
+    "toastUserDeactivated": "Usuario desactivado.",
+    "toastUserRestored": "Usuario restaurado."
   },
   "common": {
     "genericLoadError": "No se pudo cargar. Inténtalo de nuevo más tarde.",

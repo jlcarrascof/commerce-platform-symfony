@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
+import { useToast } from '../composables/useToast'
 import { useAuthStore } from '../stores/auth'
 import type { AdminUser } from '../types/user'
 import BaseCard from '../components/base/BaseCard.vue'
@@ -10,6 +11,7 @@ import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 
 const { t } = useI18n()
+const toast = useToast()
 const authStore = useAuthStore()
 
 const showDeleted = ref(false)
@@ -59,6 +61,7 @@ async function deactivateUser(user: AdminUser): Promise<void> {
   try {
     await apiClient.delete(`/users/${user.id}`)
     await refresh()
+    toast.deleted(t('adminUsers.toastUserDeactivated'))
   } catch (err: any) {
     rowErrors[user.id] = err.response?.data?.message ?? t('adminUsers.deactivateError')
   } finally {
@@ -73,6 +76,7 @@ async function restoreUser(user: AdminUser): Promise<void> {
   try {
     await apiClient.post(`/users/${user.id}/restore`)
     await refresh()
+    toast.restored(t('adminUsers.toastUserRestored'))
   } catch (err: any) {
     rowErrors[user.id] = err.response?.data?.message ?? t('adminUsers.restoreError')
   } finally {
@@ -123,6 +127,8 @@ async function submitForm(): Promise<void> {
     payload.password = formPassword.value
   }
 
+  const isEditing = editingUser.value !== null
+
   try {
     if (editingUser.value) {
       await apiClient.put(`/users/${editingUser.value.id}`, payload)
@@ -131,6 +137,7 @@ async function submitForm(): Promise<void> {
     }
     isModalOpen.value = false
     await refresh()
+    isEditing ? toast.updated(t('adminUsers.toastUserUpdated')) : toast.created(t('adminUsers.toastUserCreated'))
   } catch (err: any) {
     formError.value = err.response?.data?.errors?.[0]?.message ?? err.response?.data?.message ?? t('common.saveError')
   } finally {

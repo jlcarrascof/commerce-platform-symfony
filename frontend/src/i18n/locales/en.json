@@ -106,7 +106,15 @@
     "slugHint": "Lowercase letters, numbers and dashes only (e.g. wireless-mouse).",
     "saveError": "Could not save. Please check the form and try again.",
     "searchPlaceholder": "Search by name...",
-    "noSearchResults": "No items match your search."
+    "noSearchResults": "No items match your search.",
+    "toastProductCreated": "Product created.",
+    "toastProductUpdated": "Product updated.",
+    "toastProductDeleted": "Product deleted.",
+    "toastProductRestored": "Product restored.",
+    "toastCategoryCreated": "Category created.",
+    "toastCategoryUpdated": "Category updated.",
+    "toastCategoryDeleted": "Category deleted.",
+    "toastCategoryRestored": "Category restored."
   },
   "adminUsers": {
     "title": "Users",
@@ -132,7 +140,11 @@
     "restoreError": "Could not restore this user.",
     "selfDeactivateError": "You cannot deactivate your own account.",
     "emailTakenError": "This email is already in use.",
-    "fullNameRequiredError": "Full name is required for customer accounts."
+    "fullNameRequiredError": "Full name is required for customer accounts.",
+    "toastUserCreated": "User created.",
+    "toastUserUpdated": "User updated.",
+    "toastUserDeactivated": "User deactivated.",
+    "toastUserRestored": "User restored."
   },
   "common": {
     "genericLoadError": "Could not load. Please try again later.",

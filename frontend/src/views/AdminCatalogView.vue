@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import apiClient from '../api/client'
+import { useToast } from '../composables/useToast'
 import type { Product } from '../types/product'
 import type { Category } from '../types/category'
 import BaseCard from '../components/base/BaseCard.vue'
@@ -13,6 +14,7 @@ type Tab = 'products' | 'categories'
 type CatalogItem = Product | Category
 
 const { t } = useI18n()
+const toast = useToast()
 const activeTab = ref<Tab>('products')
 const showDeleted = ref(false)
 
@@ -89,6 +91,7 @@ async function deleteItem(item: CatalogItem): Promise<void> {
   try {
     await apiClient.delete(`/${resource}/${item.id}`)
     await refresh()
+    toast.deleted(activeTab.value === 'products' ? t('adminCatalog.toastProductDeleted') : t('adminCatalog.toastCategoryDeleted'))
   } catch (err: any) {
     rowErrors[item.id] = err.response?.data?.message ?? t('adminCatalog.deleteError')
   } finally {
@@ -105,6 +108,7 @@ async function restoreItem(item: CatalogItem): Promise<void> {
   try {
     await apiClient.post(`/${resource}/${item.id}/restore`)
     await refresh()
+    toast.restored(activeTab.value === 'products' ? t('adminCatalog.toastProductRestored') : t('adminCatalog.toastCategoryRestored'))
   } catch (err: any) {
     rowErrors[item.id] = err.response?.data?.message ?? t('adminCatalog.restoreError')
   } finally {
@@ -203,6 +207,8 @@ async function submitForm(): Promise<void> {
           slug: formSlug.value,
         }
 
+  const isEditing = editingItem.value !== null
+
   try {
     if (editingItem.value) {
       await apiClient.put(`/${resource}/${editingItem.value.id}`, payload)
@@ -213,6 +219,12 @@ async function submitForm(): Promise<void> {
     await refresh()
     if (resource === 'categories') {
       await fetchAllCategories()
+    }
+
+    if (activeTab.value === 'products') {
+      isEditing ? toast.updated(t('adminCatalog.toastProductUpdated')) : toast.created(t('adminCatalog.toastProductCreated'))
+    } else {
+      isEditing ? toast.updated(t('adminCatalog.toastCategoryUpdated')) : toast.created(t('adminCatalog.toastCategoryCreated'))
     }
   } catch (err: any) {
     formError.value = err.response?.data?.errors?.[0]?.message ?? err.response?.data?.message ?? t('adminCatalog.saveError')

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
+import ToastContainer from './components/base/ToastContainer.vue'
 </script>
 
 <template>
@@ -10,6 +11,7 @@ import AppFooter from './components/layout/AppFooter.vue'
       <RouterView />
     </main>
     <AppFooter />
+    <ToastContainer />
   </div>
 </template>
 
