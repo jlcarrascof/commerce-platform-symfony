@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
 import { setLocale, SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n'
@@ -10,18 +10,16 @@ import { useTheme } from '../../composables/useTheme'
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const { t, locale } = useI18n()
 const { theme, toggleTheme } = useTheme()
 
-const navLinks = computed(() => [
-  { label: t('nav.catalog'), to: '/' },
-  ...(authStore.isAdmin
-    ? [
-        { label: t('nav.admin'), to: '/admin' },
-        { label: t('nav.adminCatalog'), to: '/admin/catalog' },
-      ]
-    : []),
+const adminLinks = computed(() => [
+  { label: t('admin.orders'), to: '/admin' },
+  { label: t('nav.adminCatalog'), to: '/admin/catalog' },
+  { label: t('nav.adminUsers'), to: '/admin/users' },
 ])
+const isAdminRouteActive = computed(() => route.path.startsWith('/admin'))
 
 const LOCALE_FLAGS: Record<SupportedLocale, { flag: string; label: string }> = {
   en: { flag: 'https://flagcdn.com/us.svg', label: 'English' },
@@ -30,6 +28,8 @@ const LOCALE_FLAGS: Record<SupportedLocale, { flag: string; label: string }> = {
 
 const isLocaleMenuOpen = ref(false)
 const localeMenuRef = ref<HTMLElement | null>(null)
+const isAdminMenuOpen = ref(false)
+const adminMenuRef = ref<HTMLElement | null>(null)
 
 function handleLogout(): void {
   authStore.logout()
@@ -45,6 +45,9 @@ function handleClickOutside(event: MouseEvent): void {
   if (localeMenuRef.value && !localeMenuRef.value.contains(event.target as Node)) {
     isLocaleMenuOpen.value = false
   }
+  if (adminMenuRef.value && !adminMenuRef.value.contains(event.target as Node)) {
+    isAdminMenuOpen.value = false
+  }
 }
 
 onMounted(() => document.addEventListener('click', handleClickOutside))
@@ -55,9 +58,34 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   <header class="app-header">
     <RouterLink to="/" class="app-header__brand">{{ t('login.brandTitle') }}</RouterLink>
     <nav class="app-header__nav">
-      <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to">
-        {{ link.label }}
-      </RouterLink>
+      <RouterLink to="/">{{ t('nav.catalog') }}</RouterLink>
+
+      <div v-if="authStore.isAdmin" ref="adminMenuRef" class="app-header__admin-menu">
+        <button
+          type="button"
+          class="app-header__admin-trigger"
+          :class="{ 'app-header__admin-trigger--active': isAdminRouteActive }"
+          aria-haspopup="menu"
+          :aria-expanded="isAdminMenuOpen"
+          @click="isAdminMenuOpen = !isAdminMenuOpen"
+        >
+          {{ t('nav.admin') }}
+          <span class="app-header__admin-caret">▾</span>
+        </button>
+        <div v-if="isAdminMenuOpen" class="app-header__admin-dropdown" role="menu">
+          <RouterLink
+            v-for="link in adminLinks"
+            :key="link.to"
+            :to="link.to"
+            class="app-header__admin-item"
+            role="menuitem"
+            @click="isAdminMenuOpen = false"
+          >
+            {{ link.label }}
+          </RouterLink>
+        </div>
+      </div>
+
       <RouterLink to="/cart" class="app-header__cart">
         {{ t('nav.cart') }}
         <span v-if="cartStore.totalItems > 0" class="app-header__cart-badge">{{ cartStore.totalItems }}</span>
@@ -161,6 +189,65 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 .app-header__nav a.router-link-active {
   color: var(--color-accent-600);
+}
+
+.app-header__admin-menu {
+  position: relative;
+}
+
+.app-header__admin-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.app-header__admin-trigger--active {
+  color: var(--color-accent-text);
+}
+
+.app-header__admin-caret {
+  font-size: 10px;
+}
+
+.app-header__admin-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 24px -12px rgba(15, 23, 42, 0.3);
+  z-index: 10;
+}
+
+.app-header__admin-item {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.app-header__admin-item:hover {
+  background: var(--color-bg);
+}
+
+.app-header__admin-item.router-link-active {
+  color: var(--color-accent-text);
+  font-weight: 600;
 }
 
 .app-header__cart {

@@ -32,14 +32,15 @@ class ProductController
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
         $categorySlug = (string) $request->query->get('category', '');
         $sort = (string) $request->query->get('sort', 'name');
+        $search = trim((string) $request->query->get('search', ''));
 
-        $cacheKey = 'products_list_'.md5(serialize([$page, $limit, $categorySlug, $sort]));
+        $cacheKey = 'products_list_'.md5(serialize([$page, $limit, $categorySlug, $sort, $search]));
         $isHit = true;
 
         /** @var array{items: list<array{id: ?int, name: string, slug: string, description: string, priceInCents: int, stock: int, imageUrl: string, category: array{id: ?int, name: string, slug: string}}>, totalCount: int} $payload */
         $payload = $this->productsCache->get(
             $cacheKey,
-            function (ItemInterface $item) use (&$isHit, $categorySlug, $sort, $page, $limit): array {
+            function (ItemInterface $item) use (&$isHit, $categorySlug, $sort, $search, $page, $limit): array {
                 $isHit = false;
                 $item->tag('products');
                 $item->expiresAfter(self::CACHE_TTL_SECONDS);
@@ -49,6 +50,10 @@ class ProductController
 
                 if ('' !== $categorySlug) {
                     $qb->andWhere('c.slug = :categorySlug')->setParameter('categorySlug', $categorySlug);
+                }
+
+                if ('' !== $search) {
+                    $qb->andWhere('LOWER(p.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
                 }
 
                 $sortFields = [
@@ -117,6 +122,45 @@ class ProductController
         return new JsonResponse($this->serialize($product), 201);
     }
 
+    #[Route('/api/products/{id}', name: 'product_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $product = $this->entityManager->getRepository(Product::class)->find($id);
+
+        if (null === $product) {
+            return new JsonResponse(['message' => 'Product not found.'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $category = isset($data['categoryId'])
+            ? $this->entityManager->getRepository(Category::class)->find($data['categoryId'])
+            : $product->getCategory();
+
+        if (null === $category) {
+            return new JsonResponse(['errors' => [['field' => 'categoryId', 'message' => 'Category not found.']]], 422);
+        }
+
+        $product->setName((string) ($data['name'] ?? $product->getName()));
+        $product->setSlug((string) ($data['slug'] ?? $product->getSlug()));
+        $product->setDescription((string) ($data['description'] ?? $product->getDescription()));
+        $product->setPriceInCents((int) ($data['priceInCents'] ?? $product->getPriceInCents()));
+        $product->setStock((int) ($data['stock'] ?? $product->getStock()));
+        $product->setImageUrl((string) ($data['imageUrl'] ?? $product->getImageUrl()));
+        $product->setCategory($category);
+
+        $violations = $this->validator->validate($product);
+        if (count($violations) > 0) {
+            return new JsonResponse(['errors' => $this->formatViolations($violations)], 422);
+        }
+
+        $this->entityManager->flush();
+        $this->productsCache->invalidateTags(['products']);
+
+        return new JsonResponse($this->serialize($product));
+    }
+
     #[Route('/api/products/{id}', name: 'product_delete', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
@@ -140,6 +184,7 @@ class ProductController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $search = trim((string) $request->query->get('search', ''));
 
         $filters = $this->entityManager->getFilters();
         $filters->disable('soft_deleteable');
@@ -147,6 +192,10 @@ class ProductController
         $qb = $this->entityManager->getRepository(Product::class)->createQueryBuilder('p')
             ->andWhere('p.deletedAt IS NOT NULL')
             ->orderBy('p.deletedAt', 'DESC');
+
+        if ('' !== $search) {
+            $qb->andWhere('LOWER(p.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
+        }
 
         $totalCount = (int) (clone $qb)->select('COUNT(p.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
 

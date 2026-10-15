@@ -24,9 +24,14 @@ class CategoryController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $search = trim((string) $request->query->get('search', ''));
 
         $qb = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
             ->orderBy('c.name', 'ASC');
+
+        if ('' !== $search) {
+            $qb->andWhere('LOWER(c.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
+        }
 
         $totalCount = (int) (clone $qb)->select('COUNT(c.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
 
@@ -64,6 +69,31 @@ class CategoryController
         return new JsonResponse($this->serialize($category), 201);
     }
 
+    #[Route('/api/categories/{id}', name: 'category_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $category = $this->entityManager->getRepository(Category::class)->find($id);
+
+        if (null === $category) {
+            return new JsonResponse(['message' => 'Category not found.'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+
+        $category->setName((string) ($data['name'] ?? $category->getName()));
+        $category->setSlug((string) ($data['slug'] ?? $category->getSlug()));
+
+        $violations = $this->validator->validate($category);
+        if (count($violations) > 0) {
+            return new JsonResponse(['errors' => $this->formatViolations($violations)], 422);
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse($this->serialize($category));
+    }
+
     #[Route('/api/categories/{id}', name: 'category_delete', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
@@ -86,6 +116,7 @@ class CategoryController
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $search = trim((string) $request->query->get('search', ''));
 
         $filters = $this->entityManager->getFilters();
         $filters->disable('soft_deleteable');
@@ -93,6 +124,10 @@ class CategoryController
         $qb = $this->entityManager->getRepository(Category::class)->createQueryBuilder('c')
             ->andWhere('c.deletedAt IS NOT NULL')
             ->orderBy('c.deletedAt', 'DESC');
+
+        if ('' !== $search) {
+            $qb->andWhere('LOWER(c.name) LIKE :search')->setParameter('search', '%'.mb_strtolower($search).'%');
+        }
 
         $totalCount = (int) (clone $qb)->select('COUNT(c.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
 
