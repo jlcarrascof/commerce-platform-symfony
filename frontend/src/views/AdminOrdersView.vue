@@ -113,7 +113,7 @@ async function refreshHistory(orderId: number): Promise<void> {
   }
 }
 
-async function openOrderDetail(order: Order): Promise<void> {
+async function selectOrder(order: Order): Promise<void> {
   selectedOrder.value = order
 
   if (auditLogs[order.id]) {
@@ -122,97 +122,10 @@ async function openOrderDetail(order: Order): Promise<void> {
 
   await refreshHistory(order.id)
 }
-
-function closeOrderDetail(): void {
-  selectedOrder.value = null
-}
 </script>
 
 <template>
   <section class="admin-page">
-    <template v-if="selectedOrder">
-      <button type="button" class="order-detail__back" @click="closeOrderDetail">
-        ← {{ t('admin.backToOrders') }}
-      </button>
-
-      <BaseCard class="order-detail">
-        <div class="order-detail__header">
-          <h1>{{ t('admin.orderDetailTitle', { id: selectedOrder.id }) }}</h1>
-          <BaseBadge :tone="badgeTone(selectedOrder.status)">{{ selectedOrder.status }}</BaseBadge>
-        </div>
-
-        <p class="order-detail__meta">
-          {{ selectedOrder.customer.fullName }} — {{ formatDate(selectedOrder.createdAt) }}
-        </p>
-
-        <p v-if="selectedOrder.shippingAddress" class="admin-table__shipping-address">
-          <strong>{{ t('admin.shippingAddress') }}:</strong> {{ selectedOrder.shippingAddress }}
-        </p>
-
-        <div class="order-detail__actions">
-          <button
-            v-if="selectedOrder.status === 'pending'"
-            type="button"
-            class="admin-table__action admin-table__action--confirm"
-            :disabled="pendingActions[selectedOrder.id]"
-            @click="performAction(selectedOrder, 'confirm')"
-          >
-            {{ t('admin.confirm') }}
-          </button>
-          <button
-            v-if="selectedOrder.status !== 'cancelled'"
-            type="button"
-            class="admin-table__action admin-table__action--cancel"
-            :disabled="pendingActions[selectedOrder.id]"
-            @click="performAction(selectedOrder, 'cancel')"
-          >
-            {{ t('admin.cancel') }}
-          </button>
-        </div>
-        <p v-if="actionErrors[selectedOrder.id]" class="admin-table__row-error">
-          {{ actionErrors[selectedOrder.id] }}
-        </p>
-
-        <table class="order-detail__items">
-          <tbody>
-            <tr v-for="item in selectedOrder.items" :key="item.productId">
-              <td>{{ item.quantity }}×</td>
-              <td>{{ item.productName }}</td>
-              <td class="order-detail__items-price">{{ formatPrice(item.unitPriceInCents * item.quantity) }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="admin-table__history-header">
-          <span class="admin-table__history-title">{{ t('admin.history') }}</span>
-          <button
-            type="button"
-            class="admin-table__history-refresh"
-            :disabled="auditLoading[selectedOrder.id]"
-            @click="refreshHistory(selectedOrder.id)"
-          >
-            {{ t('admin.refresh') }}
-          </button>
-        </div>
-        <p v-if="auditLoading[selectedOrder.id]" class="admin-table__history-message">{{ t('admin.loadingHistory') }}</p>
-        <p
-          v-else-if="!auditLogs[selectedOrder.id] || auditLogs[selectedOrder.id].length === 0"
-          class="admin-table__history-message"
-        >
-          {{ t('admin.noHistory') }}
-        </p>
-        <ul v-else class="admin-table__history-list">
-          <li v-for="entry in auditLogs[selectedOrder.id]" :key="entry.id" class="admin-table__history-entry">
-            <span class="admin-table__history-avatar">{{ entry.userEmail.charAt(0).toUpperCase() }}</span>
-            <span>
-              <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
-            </span>
-          </li>
-        </ul>
-      </BaseCard>
-    </template>
-
-    <template v-else>
     <div class="admin-page__header">
       <h1>{{ t('admin.orders') }}</h1>
       <select v-model="statusFilter" class="admin-page__filter">
@@ -227,73 +140,129 @@ function closeOrderDetail(): void {
     <p v-else-if="error" class="admin-page__message admin-page__message--error">{{ error }}</p>
     <p v-else-if="orders.length === 0" class="admin-page__message">{{ t('admin.noMatch') }}</p>
 
-    <BaseCard v-else class="admin-page__card">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>{{ t('admin.colId') }}</th>
-            <th>{{ t('admin.colCustomer') }}</th>
-            <th>{{ t('admin.colStatus') }}</th>
-            <th>{{ t('admin.colCreated') }}</th>
-            <th class="admin-table__total">{{ t('admin.colTotal') }}</th>
-            <th class="admin-table__actions">{{ t('admin.colActions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="order in orders" :key="order.id">
+    <div v-else class="orders-layout">
+      <BaseCard class="orders-layout__list">
+        <table class="admin-table admin-table--compact">
+          <thead>
             <tr>
+              <th>{{ t('admin.colId') }}</th>
+              <th>{{ t('admin.colCustomer') }}</th>
+              <th>{{ t('admin.colStatus') }}</th>
+              <th class="admin-table__total">{{ t('admin.colTotal') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="order in orders"
+              :key="order.id"
+              class="orders-layout__row"
+              :class="{ 'orders-layout__row--active': selectedOrder?.id === order.id }"
+              @click="selectOrder(order)"
+            >
               <td data-label="ID">#{{ order.id }}</td>
               <td data-label="Customer">{{ order.customer.fullName }}</td>
               <td data-label="Status"><BaseBadge :tone="badgeTone(order.status)">{{ order.status }}</BaseBadge></td>
-              <td data-label="Created">{{ formatDate(order.createdAt) }}</td>
               <td data-label="Total" class="admin-table__total">{{ formatPrice(orderTotal(order)) }}</td>
-              <td data-label="Actions" class="admin-table__actions">
-                <button
-                  v-if="order.status === 'pending'"
-                  type="button"
-                  class="admin-table__action admin-table__action--confirm"
-                  :disabled="pendingActions[order.id]"
-                  @click="performAction(order, 'confirm')"
-                >
-                  {{ t('admin.confirm') }}
-                </button>
-                <button
-                  v-if="order.status !== 'cancelled'"
-                  type="button"
-                  class="admin-table__action admin-table__action--cancel"
-                  :disabled="pendingActions[order.id]"
-                  @click="performAction(order, 'cancel')"
-                >
-                  {{ t('admin.cancel') }}
-                </button>
-                <button
-                  type="button"
-                  class="admin-table__action"
-                  @click="openOrderDetail(order)"
-                >
-                  {{ t('admin.viewDetail') }}
-                </button>
-              </td>
             </tr>
-            <tr v-if="actionErrors[order.id]">
-              <td colspan="6" class="admin-table__row-error">{{ actionErrors[order.id] }}</td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </BaseCard>
+          </tbody>
+        </table>
 
-    <div v-if="!isLoading && !error && totalCount > 0" class="admin-page__pagination">
-      <span class="admin-page__pagination-info">
-        {{ t('admin.showing', { from: (page - 1) * limit + 1, to: Math.min(page * limit, totalCount), total: totalCount }) }}
-      </span>
-      <div class="admin-page__pagination-controls">
-        <button type="button" :disabled="page === 1" @click="goToPage(page - 1)">{{ t('admin.previous') }}</button>
-        <span>{{ t('admin.pageOf', { page, total: Math.max(1, Math.ceil(totalCount / limit)) }) }}</span>
-        <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">{{ t('admin.next') }}</button>
-      </div>
+        <div v-if="totalCount > 0" class="admin-page__pagination">
+          <span class="admin-page__pagination-info">
+            {{ t('admin.showing', { from: (page - 1) * limit + 1, to: Math.min(page * limit, totalCount), total: totalCount }) }}
+          </span>
+          <div class="admin-page__pagination-controls">
+            <button type="button" :disabled="page === 1" @click="goToPage(page - 1)">{{ t('admin.previous') }}</button>
+            <span>{{ t('admin.pageOf', { page, total: Math.max(1, Math.ceil(totalCount / limit)) }) }}</span>
+            <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">{{ t('admin.next') }}</button>
+          </div>
+        </div>
+      </BaseCard>
+
+      <BaseCard class="orders-layout__detail">
+        <template v-if="selectedOrder">
+          <div class="order-detail__header">
+            <h2>{{ t('admin.orderDetailTitle', { id: selectedOrder.id }) }}</h2>
+            <BaseBadge :tone="badgeTone(selectedOrder.status)">{{ selectedOrder.status }}</BaseBadge>
+          </div>
+
+          <p class="order-detail__meta">
+            {{ selectedOrder.customer.fullName }} — {{ formatDate(selectedOrder.createdAt) }}
+          </p>
+
+          <p v-if="selectedOrder.shippingAddress" class="admin-table__shipping-address">
+            <strong>{{ t('admin.shippingAddress') }}:</strong> {{ selectedOrder.shippingAddress }}
+          </p>
+
+          <div class="order-detail__actions">
+            <button
+              v-if="selectedOrder.status === 'pending'"
+              type="button"
+              class="admin-table__action admin-table__action--confirm"
+              :disabled="pendingActions[selectedOrder.id]"
+              @click="performAction(selectedOrder, 'confirm')"
+            >
+              {{ t('admin.confirm') }}
+            </button>
+            <button
+              v-if="selectedOrder.status !== 'cancelled'"
+              type="button"
+              class="admin-table__action admin-table__action--cancel"
+              :disabled="pendingActions[selectedOrder.id]"
+              @click="performAction(selectedOrder, 'cancel')"
+            >
+              {{ t('admin.cancel') }}
+            </button>
+          </div>
+          <p v-if="actionErrors[selectedOrder.id]" class="admin-table__row-error">
+            {{ actionErrors[selectedOrder.id] }}
+          </p>
+
+          <table class="order-detail__items">
+            <tbody>
+              <tr v-for="item in selectedOrder.items" :key="item.productId">
+                <td>{{ item.quantity }}×</td>
+                <td>{{ item.productName }}</td>
+                <td class="order-detail__items-price">{{ formatPrice(item.unitPriceInCents * item.quantity) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+        <p v-else class="admin-page__message">{{ t('admin.selectOrderHint') }}</p>
+      </BaseCard>
+
+      <BaseCard class="orders-layout__audit">
+        <template v-if="selectedOrder">
+          <div class="admin-table__history-header">
+            <span class="admin-table__history-title">{{ t('admin.history') }}</span>
+            <button
+              type="button"
+              class="admin-table__history-refresh"
+              :disabled="auditLoading[selectedOrder.id]"
+              @click="refreshHistory(selectedOrder.id)"
+            >
+              {{ t('admin.refresh') }}
+            </button>
+          </div>
+          <p v-if="auditLoading[selectedOrder.id]" class="admin-table__history-message">{{ t('admin.loadingHistory') }}</p>
+          <p
+            v-else-if="!auditLogs[selectedOrder.id] || auditLogs[selectedOrder.id].length === 0"
+            class="admin-table__history-message"
+          >
+            {{ t('admin.noHistory') }}
+          </p>
+          <ul v-else class="admin-table__history-list">
+            <li v-for="entry in auditLogs[selectedOrder.id]" :key="entry.id" class="admin-table__history-entry">
+              <span class="admin-table__history-avatar">{{ entry.userEmail.charAt(0).toUpperCase() }}</span>
+              <span>
+                <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
+              </span>
+            </li>
+          </ul>
+        </template>
+        <p v-else class="admin-page__message">—</p>
+      </BaseCard>
     </div>
-    </template>
   </section>
 </template>
 
@@ -330,6 +299,32 @@ function closeOrderDetail(): void {
   color: var(--color-error-600, #dc2626);
 }
 
+.orders-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.orders-layout__list,
+.orders-layout__detail,
+.orders-layout__audit {
+  min-height: 200px;
+}
+
+.orders-layout__row {
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.orders-layout__row:hover {
+  background: var(--color-surface);
+}
+
+.orders-layout__row--active {
+  background: color-mix(in srgb, var(--color-accent-600) 10%, transparent);
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -360,17 +355,6 @@ function closeOrderDetail(): void {
   font-weight: 700;
   color: var(--color-text-heading);
   font-variant-numeric: tabular-nums;
-}
-
-.admin-table__actions {
-  display: flex;
-  gap: var(--space-sm);
-  justify-content: flex-end;
-}
-
-th.admin-table__actions {
-  justify-content: flex-end;
-  padding-right: 20%;
 }
 
 .admin-table__action {
@@ -441,22 +425,6 @@ th.admin-table__actions {
   cursor: not-allowed;
 }
 
-.order-detail__back {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: var(--space-md);
-}
-
-.order-detail__back:hover {
-  color: var(--color-text-heading);
-}
-
 .order-detail__header {
   display: flex;
   align-items: center;
@@ -465,8 +433,8 @@ th.admin-table__actions {
   margin-bottom: var(--space-xs);
 }
 
-.order-detail__header h1 {
-  font-size: 22px;
+.order-detail__header h2 {
+  font-size: 18px;
   margin: 0;
 }
 
@@ -591,8 +559,12 @@ th.admin-table__actions {
     width: 100%;
   }
 
-  /* Collapse the table into a stack of cards: each row becomes a card,
-     each cell becomes a labelled line using its data-label attribute. */
+  .orders-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Collapse the order list table into a stack of cards: each row
+     becomes a card, each cell becomes a labelled line via data-label. */
   .admin-table thead {
     display: none;
   }
@@ -612,21 +584,12 @@ th.admin-table__actions {
     padding: var(--space-sm) var(--space-md);
   }
 
-  .admin-table tr:has(.admin-table__row-error),
-  .admin-table tr:has(.admin-table__history) {
-    margin-bottom: 0;
-    border: none;
-    padding: 0;
-  }
-
-  .admin-table__row-error,
-  .admin-table__history {
+  .admin-table__row-error {
     display: block !important;
     text-align: left;
   }
 
-  .admin-table__row-error::before,
-  .admin-table__history::before {
+  .admin-table__row-error::before {
     content: none;
   }
 
@@ -652,16 +615,6 @@ th.admin-table__actions {
     color: var(--color-text-muted);
     font-weight: 600;
     text-align: left;
-  }
-
-  .admin-table__actions {
-    justify-content: flex-end;
-    padding-right: 0;
-    flex-wrap: wrap;
-  }
-
-  th.admin-table__actions {
-    display: none;
   }
 
   .admin-page__pagination {
