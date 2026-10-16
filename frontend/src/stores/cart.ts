@@ -1,16 +1,34 @@
 import { defineStore } from 'pinia'
 import type { Product } from '../types/product'
+import { AUTH_TOKEN_STORAGE_KEY } from '../api/client'
 
-const CART_STORAGE_KEY = 'cart_items'
+const CART_STORAGE_PREFIX = 'cart_items'
 
 export interface CartItem {
   product: Product
   quantity: number
 }
 
+function decodeEmailFromToken(token: string): string | null {
+  try {
+    return JSON.parse(atob(token.split('.')[1])).username ?? null
+  } catch {
+    return null
+  }
+}
+
+// Each user (and the anonymous/logged-out state) gets its own storage slot,
+// keyed off the JWT's username, so switching accounts in the same browser
+// never leaks one person's cart into another's.
+function currentCartKey(): string {
+  const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
+  const email = token ? decodeEmailFromToken(token) : null
+  return email ? `${CART_STORAGE_PREFIX}:${email}` : CART_STORAGE_PREFIX
+}
+
 function loadFromStorage(): CartItem[] {
   try {
-    const raw = localStorage.getItem(CART_STORAGE_KEY)
+    const raw = localStorage.getItem(currentCartKey())
     return raw ? (JSON.parse(raw) as CartItem[]) : []
   } catch {
     return []
@@ -18,7 +36,7 @@ function loadFromStorage(): CartItem[] {
 }
 
 function saveToStorage(items: CartItem[]): void {
-  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+  localStorage.setItem(currentCartKey(), JSON.stringify(items))
 }
 
 export const useCartStore = defineStore('cart', {
@@ -64,6 +82,12 @@ export const useCartStore = defineStore('cart', {
     clear(): void {
       this.items = []
       saveToStorage(this.items)
+    },
+
+    // Re-reads from storage under whichever user's cart key is now active,
+    // called right after the token changes on login/logout.
+    reload(): void {
+      this.items = loadFromStorage()
     },
   },
 })

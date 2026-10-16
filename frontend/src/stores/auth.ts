@@ -40,10 +40,6 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(email: string, password: string): Promise<void> {
-      // Discard whatever cart is left in this browser before switching
-      // identities, so a new login never inherits the previous user's cart.
-      useCartStore().clear()
-
       const response = await apiClient.post<{ token: string; refresh_token: string }>('/login', {
         email,
         password,
@@ -51,13 +47,17 @@ export const useAuthStore = defineStore('auth', {
       this.token = response.data.token
       localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, this.token)
       localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.data.refresh_token)
+
+      // The cart store keys its storage off the token's username, so this
+      // must run after the new token is in place to load this user's own cart.
+      useCartStore().reload()
     },
 
     logout(): void {
       this.token = null
       localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
       localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
-      useCartStore().clear()
+      useCartStore().reload()
     },
   },
 })
