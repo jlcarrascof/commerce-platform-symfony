@@ -6,8 +6,10 @@ import { useCartStore } from '../../stores/cart'
 import { useAuthStore } from '../../stores/auth'
 import { setLocale, SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n'
 import { useTheme } from '../../composables/useTheme'
+import { useCartDrawer } from '../../composables/useCartDrawer'
 
 const cartStore = useCartStore()
+const { openCartDrawer } = useCartDrawer()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -86,10 +88,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         </div>
       </div>
 
-      <RouterLink to="/cart" class="app-header__cart">
+      <button type="button" class="app-header__cart" @click="openCartDrawer">
         {{ t('nav.cart') }}
         <span v-if="cartStore.totalItems > 0" class="app-header__cart-badge">{{ cartStore.totalItems }}</span>
-      </RouterLink>
+      </button>
 
       <span v-if="authStore.isAuthenticated" class="app-header__session">
         <span class="app-header__session-email">{{ authStore.userEmail }}</span>
@@ -169,7 +171,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   font-weight: 500;
 }
 
-:root[data-theme='dark'] .app-header__nav a:not(.router-link-active) {
+:root[data-theme='dark'] .app-header__nav a:not(.router-link-active),
+:root[data-theme='dark'] .app-header__cart {
   color: var(--color-text);
 }
 
@@ -178,7 +181,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .app-header__nav a:not(.router-link-active) {
+  :root:not([data-theme='light']) .app-header__nav a:not(.router-link-active),
+  :root:not([data-theme='light']) .app-header__cart {
     color: var(--color-text);
   }
 
@@ -254,6 +258,14 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  font-family: var(--font-sans);
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .app-header__cart-badge {

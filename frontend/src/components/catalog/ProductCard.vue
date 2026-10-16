@@ -54,6 +54,12 @@ function handleAddToCart(): void {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg, 0 12px 24px -8px rgba(0, 0, 0, 0.2));
 }
 
 .product-card__image {

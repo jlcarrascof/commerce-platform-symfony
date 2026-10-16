@@ -82,6 +82,8 @@
     "noHistory": "Todavía no hay cambios de estado registrados.",
     "historyBy": "por",
     "shippingAddress": "Dirección de envío",
+    "orderDetailTitle": "Pedido #{id}",
+    "selectOrderHint": "Selecciona un pedido para ver sus detalles.",
     "showing": "Mostrando {from}–{to} de {total}",
     "previous": "Anterior",
     "pageOf": "Página {page} de {total}",
