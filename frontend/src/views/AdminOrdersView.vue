@@ -195,6 +195,9 @@ async function toggleHistory(order: Order): Promise<void> {
             </tr>
             <tr v-if="expandedOrderId === order.id">
               <td colspan="6" class="admin-table__history">
+                <p v-if="order.shippingAddress" class="admin-table__shipping-address">
+                  <strong>{{ t('admin.shippingAddress') }}:</strong> {{ order.shippingAddress }}
+                </p>
                 <div class="admin-table__history-header">
                   <span class="admin-table__history-title">{{ t('admin.history') }}</span>
                   <button
@@ -382,6 +385,12 @@ th.admin-table__actions {
 .admin-table__history {
   background: var(--color-surface);
   padding: var(--space-sm) var(--space-md) !important;
+}
+
+.admin-table__shipping-address {
+  font-size: 13px;
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
 }
 
 .admin-table__history-header {

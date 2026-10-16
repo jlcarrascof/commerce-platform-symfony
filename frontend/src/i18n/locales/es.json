@@ -12,7 +12,8 @@
     "title": "Catálogo",
     "loading": "Cargando productos...",
     "error": "No se pudo cargar el catálogo. Inténtalo de nuevo más tarde.",
-    "empty": "Todavía no hay productos disponibles."
+    "empty": "Todavía no hay productos disponibles.",
+    "allCategories": "Todas"
   },
   "product": {
     "addToCart": "Agregar al carrito",
@@ -30,6 +31,11 @@
     "orderSuccess": "Pedido #{id} creado con éxito.",
     "backToCatalog": "Volver al catálogo",
     "emptyCart": "Tu carrito está vacío. Agrega productos antes de pagar.",
+    "customerInformation": "Información del cliente",
+    "email": "Email",
+    "shippingAddress": "Dirección de envío",
+    "shippingAddressPlaceholder": "Calle Principal 123, Madrid, España",
+    "shippingAddressRequired": "Por favor ingresa una dirección de envío.",
     "qty": "Cant.",
     "description": "Descripción",
     "unitPrice": "Precio unitario",
@@ -49,6 +55,7 @@
     "loggingIn": "Iniciando sesión...",
     "invalidCredentials": "Email o contraseña inválidos.",
     "tooManyAttempts": "Demasiados intentos de inicio de sesión. Espera un minuto e inténtalo de nuevo.",
+    "sessionExpired": "Tu sesión expiró. Por favor inicia sesión de nuevo.",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña"
   },
@@ -74,6 +81,7 @@
     "loadingHistory": "Cargando historial...",
     "noHistory": "Todavía no hay cambios de estado registrados.",
     "historyBy": "por",
+    "shippingAddress": "Dirección de envío",
     "showing": "Mostrando {from}–{to} de {total}",
     "previous": "Anterior",
     "pageOf": "Página {page} de {total}",

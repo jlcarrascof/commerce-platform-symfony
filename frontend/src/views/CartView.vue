@@ -44,8 +44,14 @@ function increase(productId: number, currentQuantity: number): void {
             <button type="button" @click="increase(item.product.id, item.quantity)">+</button>
           </div>
           <span class="cart-item__subtotal">{{ formatPrice(item.product.priceInCents * item.quantity) }}</span>
-          <button type="button" class="cart-item__remove" @click="cartStore.removeItem(item.product.id)">
-            {{ t('cart.remove') }}
+          <button
+            type="button"
+            class="cart-item__remove"
+            :aria-label="t('cart.remove')"
+            :title="t('cart.remove')"
+            @click="cartStore.removeItem(item.product.id)"
+          >
+            🗑️
           </button>
         </li>
       </ul>
@@ -138,11 +144,22 @@ function increase(productId: number, currentQuantity: number): void {
 }
 
 .cart-item__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
-  color: var(--color-error-600, #dc2626);
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  line-height: 1;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.cart-item__remove:hover {
+  background: color-mix(in srgb, var(--color-error-600, #dc2626) 12%, transparent);
 }
 
 .cart-page__summary {

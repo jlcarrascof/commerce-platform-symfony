@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '../stores/auth'
 import BaseInput from '../components/base/BaseInput.vue'
@@ -10,12 +10,14 @@ import BaseButton from '../components/base/BaseButton.vue'
 const { t } = useI18n()
 const email = ref('admin@example.com')
 const password = ref('password123')
-const error = ref<string | null>(null)
 const isSubmitting = ref(false)
 const isPasswordVisible = ref(false)
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+
+const error = ref<string | null>(route.query.sessionExpired ? t('login.sessionExpired') : null)
 
 async function handleSubmit(): Promise<void> {
   error.value = null

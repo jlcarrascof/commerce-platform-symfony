@@ -4,16 +4,20 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import apiClient from '../api/client'
 import { useCartStore } from '../stores/cart'
+import { useAuthStore } from '../stores/auth'
 import BaseCard from '../components/base/BaseCard.vue'
 import BaseButton from '../components/base/BaseButton.vue'
+import BaseInput from '../components/base/BaseInput.vue'
 
 const { t } = useI18n()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
 const orderId = ref<number | null>(null)
+const shippingAddress = ref('')
 
 // Stable per checkout attempt so a retry after a network error does not create a duplicate order.
 const idempotencyKey = crypto.randomUUID()
@@ -26,6 +30,12 @@ function formatPrice(priceInCents: number): string {
 
 async function placeOrder(): Promise<void> {
   error.value = null
+
+  if ('' === shippingAddress.value.trim()) {
+    error.value = t('checkout.shippingAddressRequired')
+    return
+  }
+
   isSubmitting.value = true
 
   try {
@@ -36,6 +46,7 @@ async function placeOrder(): Promise<void> {
           productId: item.product.id,
           quantity: item.quantity,
         })),
+        shippingAddress: shippingAddress.value.trim(),
       },
       { headers: { 'Idempotency-Key': idempotencyKey } },
     )
@@ -67,6 +78,22 @@ async function placeOrder(): Promise<void> {
       </p>
 
       <template v-else>
+        <section class="checkout-customer">
+          <h2 class="checkout-customer__title">{{ t('checkout.customerInformation') }}</h2>
+          <label class="checkout-customer__field">
+            <span>{{ t('checkout.email') }}</span>
+            <BaseInput :model-value="authStore.userEmail ?? ''" disabled />
+          </label>
+          <label class="checkout-customer__field">
+            <span>{{ t('checkout.shippingAddress') }}</span>
+            <BaseInput
+              v-model="shippingAddress"
+              required
+              :placeholder="t('checkout.shippingAddressPlaceholder')"
+            />
+          </label>
+        </section>
+
         <table class="checkout-table">
           <thead>
             <tr>
@@ -79,7 +106,17 @@ async function placeOrder(): Promise<void> {
           <tbody>
             <tr v-for="item in cartStore.items" :key="item.product.id">
               <td class="checkout-table__qty">{{ item.quantity }}</td>
-              <td class="checkout-table__description">{{ item.product.name }}</td>
+              <td class="checkout-table__description">
+                <div class="checkout-table__product">
+                  <img
+                    class="checkout-table__thumb"
+                    :src="item.product.imageUrl"
+                    :alt="item.product.name"
+                    loading="lazy"
+                  />
+                  <span>{{ item.product.name }}</span>
+                </div>
+              </td>
               <td class="checkout-table__unit-price">{{ formatPrice(item.product.priceInCents) }}</td>
               <td class="checkout-table__line-total">
                 {{ formatPrice(item.product.priceInCents * item.quantity) }}
@@ -97,7 +134,7 @@ async function placeOrder(): Promise<void> {
         <p v-if="error" class="checkout-page__error">{{ error }}</p>
 
         <BaseButton :disabled="isSubmitting" class="checkout-page__submit" @click="placeOrder">
-          {{ isSubmitting ? t('checkout.placingOrder') : t('checkout.placeOrder') }}
+          🛍️ {{ isSubmitting ? t('checkout.placingOrder') : t('checkout.placeOrder') }}
         </BaseButton>
       </template>
     </BaseCard>
@@ -122,6 +159,28 @@ async function placeOrder(): Promise<void> {
 
 .checkout-page__message {
   color: var(--color-text-muted);
+}
+
+.checkout-customer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.checkout-customer__title {
+  font-size: 15px;
+  margin: 0;
+}
+
+.checkout-customer__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 14px;
+  color: var(--color-text-heading);
 }
 
 .checkout-table {
@@ -163,6 +222,21 @@ async function placeOrder(): Promise<void> {
   text-align: left;
   font-weight: 500;
   color: var(--color-text-heading);
+}
+
+.checkout-table__product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.checkout-table__thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  flex-shrink: 0;
 }
 
 .checkout-table td.checkout-table__line-total {

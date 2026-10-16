@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import apiClient, { AUTH_TOKEN_STORAGE_KEY } from '../api/client'
+import apiClient, { AUTH_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY } from '../api/client'
+import { useCartStore } from './cart'
 
 interface JwtPayload {
   username?: string
@@ -39,14 +40,24 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(email: string, password: string): Promise<void> {
-      const response = await apiClient.post<{ token: string }>('/login', { email, password })
+      const response = await apiClient.post<{ token: string; refresh_token: string }>('/login', {
+        email,
+        password,
+      })
       this.token = response.data.token
       localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, this.token)
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.data.refresh_token)
+
+      // The cart store keys its storage off the token's username, so this
+      // must run after the new token is in place to load this user's own cart.
+      useCartStore().reload()
     },
 
     logout(): void {
       this.token = null
       localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
+      localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
+      useCartStore().reload()
     },
   },
 })

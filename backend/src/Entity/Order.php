@@ -35,6 +35,9 @@ class Order
     #[ORM\Column(length: 100, nullable: true, unique: true)]
     private ?string $idempotencyKey = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $shippingAddress = null;
+
     /** @var Collection<int, OrderItem> */
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist'], orphanRemoval: true)]
     private Collection $items;
@@ -80,6 +83,16 @@ class Order
     public function setIdempotencyKey(?string $idempotencyKey): void
     {
         $this->idempotencyKey = $idempotencyKey;
+    }
+
+    public function getShippingAddress(): ?string
+    {
+        return $this->shippingAddress;
+    }
+
+    public function setShippingAddress(?string $shippingAddress): void
+    {
+        $this->shippingAddress = $shippingAddress;
     }
 
     /** @return Collection<int, OrderItem> */
