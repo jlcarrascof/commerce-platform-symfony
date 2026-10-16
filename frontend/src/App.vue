@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
 import AdminSidebar from './components/layout/AdminSidebar.vue'
+import CartDrawer from './components/layout/CartDrawer.vue'
 import ToastContainer from './components/base/ToastContainer.vue'
 
 const route = useRoute()
@@ -20,6 +21,7 @@ const isAdminArea = computed(() => Boolean(route.meta.requiresAdmin))
       </div>
     </main>
     <AppFooter />
+    <CartDrawer />
     <ToastContainer />
   </div>
 </template>
