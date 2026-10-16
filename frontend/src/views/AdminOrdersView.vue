@@ -20,7 +20,7 @@ const totalCount = ref(0)
 const actionErrors = reactive<Record<number, string>>({})
 const pendingActions = reactive<Record<number, boolean>>({})
 
-const expandedOrderId = ref<number | null>(null)
+const selectedOrder = ref<Order | null>(null)
 const auditLogs = reactive<Record<number, AuditLogEntry[]>>({})
 const auditLoading = reactive<Record<number, boolean>>({})
 
@@ -86,9 +86,12 @@ async function performAction(order: Order, action: 'confirm' | 'cancel'): Promis
     if (index !== -1) {
       orders.value[index] = response.data
     }
+    if (selectedOrder.value?.id === order.id) {
+      selectedOrder.value = response.data
+    }
     // Invalidate the cached history so a re-opened panel reflects this new action.
     delete auditLogs[order.id]
-    if (expandedOrderId.value === order.id) {
+    if (selectedOrder.value?.id === order.id) {
       await refreshHistory(order.id)
     }
   } catch (err: any) {
@@ -110,13 +113,8 @@ async function refreshHistory(orderId: number): Promise<void> {
   }
 }
 
-async function toggleHistory(order: Order): Promise<void> {
-  if (expandedOrderId.value === order.id) {
-    expandedOrderId.value = null
-    return
-  }
-
-  expandedOrderId.value = order.id
+async function openOrderDetail(order: Order): Promise<void> {
+  selectedOrder.value = order
 
   if (auditLogs[order.id]) {
     return
@@ -124,10 +122,97 @@ async function toggleHistory(order: Order): Promise<void> {
 
   await refreshHistory(order.id)
 }
+
+function closeOrderDetail(): void {
+  selectedOrder.value = null
+}
 </script>
 
 <template>
   <section class="admin-page">
+    <template v-if="selectedOrder">
+      <button type="button" class="order-detail__back" @click="closeOrderDetail">
+        ← {{ t('admin.backToOrders') }}
+      </button>
+
+      <BaseCard class="order-detail">
+        <div class="order-detail__header">
+          <h1>{{ t('admin.orderDetailTitle', { id: selectedOrder.id }) }}</h1>
+          <BaseBadge :tone="badgeTone(selectedOrder.status)">{{ selectedOrder.status }}</BaseBadge>
+        </div>
+
+        <p class="order-detail__meta">
+          {{ selectedOrder.customer.fullName }} — {{ formatDate(selectedOrder.createdAt) }}
+        </p>
+
+        <p v-if="selectedOrder.shippingAddress" class="admin-table__shipping-address">
+          <strong>{{ t('admin.shippingAddress') }}:</strong> {{ selectedOrder.shippingAddress }}
+        </p>
+
+        <div class="order-detail__actions">
+          <button
+            v-if="selectedOrder.status === 'pending'"
+            type="button"
+            class="admin-table__action admin-table__action--confirm"
+            :disabled="pendingActions[selectedOrder.id]"
+            @click="performAction(selectedOrder, 'confirm')"
+          >
+            {{ t('admin.confirm') }}
+          </button>
+          <button
+            v-if="selectedOrder.status !== 'cancelled'"
+            type="button"
+            class="admin-table__action admin-table__action--cancel"
+            :disabled="pendingActions[selectedOrder.id]"
+            @click="performAction(selectedOrder, 'cancel')"
+          >
+            {{ t('admin.cancel') }}
+          </button>
+        </div>
+        <p v-if="actionErrors[selectedOrder.id]" class="admin-table__row-error">
+          {{ actionErrors[selectedOrder.id] }}
+        </p>
+
+        <table class="order-detail__items">
+          <tbody>
+            <tr v-for="item in selectedOrder.items" :key="item.productId">
+              <td>{{ item.quantity }}×</td>
+              <td>{{ item.productName }}</td>
+              <td class="order-detail__items-price">{{ formatPrice(item.unitPriceInCents * item.quantity) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="admin-table__history-header">
+          <span class="admin-table__history-title">{{ t('admin.history') }}</span>
+          <button
+            type="button"
+            class="admin-table__history-refresh"
+            :disabled="auditLoading[selectedOrder.id]"
+            @click="refreshHistory(selectedOrder.id)"
+          >
+            {{ t('admin.refresh') }}
+          </button>
+        </div>
+        <p v-if="auditLoading[selectedOrder.id]" class="admin-table__history-message">{{ t('admin.loadingHistory') }}</p>
+        <p
+          v-else-if="!auditLogs[selectedOrder.id] || auditLogs[selectedOrder.id].length === 0"
+          class="admin-table__history-message"
+        >
+          {{ t('admin.noHistory') }}
+        </p>
+        <ul v-else class="admin-table__history-list">
+          <li v-for="entry in auditLogs[selectedOrder.id]" :key="entry.id" class="admin-table__history-entry">
+            <span class="admin-table__history-avatar">{{ entry.userEmail.charAt(0).toUpperCase() }}</span>
+            <span>
+              <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
+            </span>
+          </li>
+        </ul>
+      </BaseCard>
+    </template>
+
+    <template v-else>
     <div class="admin-page__header">
       <h1>{{ t('admin.orders') }}</h1>
       <select v-model="statusFilter" class="admin-page__filter">
@@ -184,44 +269,14 @@ async function toggleHistory(order: Order): Promise<void> {
                 <button
                   type="button"
                   class="admin-table__action"
-                  @click="toggleHistory(order)"
+                  @click="openOrderDetail(order)"
                 >
-                  {{ expandedOrderId === order.id ? t('admin.hideHistory') : t('admin.history') }}
+                  {{ t('admin.viewDetail') }}
                 </button>
               </td>
             </tr>
             <tr v-if="actionErrors[order.id]">
               <td colspan="6" class="admin-table__row-error">{{ actionErrors[order.id] }}</td>
-            </tr>
-            <tr v-if="expandedOrderId === order.id">
-              <td colspan="6" class="admin-table__history">
-                <p v-if="order.shippingAddress" class="admin-table__shipping-address">
-                  <strong>{{ t('admin.shippingAddress') }}:</strong> {{ order.shippingAddress }}
-                </p>
-                <div class="admin-table__history-header">
-                  <span class="admin-table__history-title">{{ t('admin.history') }}</span>
-                  <button
-                    type="button"
-                    class="admin-table__history-refresh"
-                    :disabled="auditLoading[order.id]"
-                    @click="refreshHistory(order.id)"
-                  >
-                    {{ t('admin.refresh') }}
-                  </button>
-                </div>
-                <p v-if="auditLoading[order.id]" class="admin-table__history-message">{{ t('admin.loadingHistory') }}</p>
-                <p v-else-if="!auditLogs[order.id] || auditLogs[order.id].length === 0" class="admin-table__history-message">
-                  {{ t('admin.noHistory') }}
-                </p>
-                <ul v-else class="admin-table__history-list">
-                  <li v-for="entry in auditLogs[order.id]" :key="entry.id" class="admin-table__history-entry">
-                    <span class="admin-table__history-avatar">{{ entry.userEmail.charAt(0).toUpperCase() }}</span>
-                    <span>
-                      <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
-                    </span>
-                  </li>
-                </ul>
-              </td>
             </tr>
           </template>
         </tbody>
@@ -238,6 +293,7 @@ async function toggleHistory(order: Order): Promise<void> {
         <button type="button" :disabled="page * limit >= totalCount" @click="goToPage(page + 1)">{{ t('admin.next') }}</button>
       </div>
     </div>
+    </template>
   </section>
 </template>
 
@@ -385,9 +441,63 @@ th.admin-table__actions {
   cursor: not-allowed;
 }
 
-.admin-table__history {
-  background: var(--color-surface);
-  padding: var(--space-sm) var(--space-md) !important;
+.order-detail__back {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: var(--space-md);
+}
+
+.order-detail__back:hover {
+  color: var(--color-text-heading);
+}
+
+.order-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.order-detail__header h1 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.order-detail__meta {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 var(--space-md);
+}
+
+.order-detail__actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+
+.order-detail__items {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-md) 0 var(--space-lg);
+}
+
+.order-detail__items td {
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+}
+
+.order-detail__items-price {
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-text-heading);
 }
 
 .admin-table__shipping-address {
