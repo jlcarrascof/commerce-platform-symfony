@@ -214,8 +214,11 @@ async function toggleHistory(order: Order): Promise<void> {
                   {{ t('admin.noHistory') }}
                 </p>
                 <ul v-else class="admin-table__history-list">
-                  <li v-for="entry in auditLogs[order.id]" :key="entry.id">
-                    <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
+                  <li v-for="entry in auditLogs[order.id]" :key="entry.id" class="admin-table__history-entry">
+                    <span class="admin-table__history-avatar">{{ entry.userEmail.charAt(0).toUpperCase() }}</span>
+                    <span>
+                      <strong>{{ entry.action }}</strong> {{ t('admin.historyBy') }} {{ entry.userEmail }} — {{ formatDate(entry.createdAt) }}
+                    </span>
                   </li>
                 </ul>
               </td>
@@ -441,6 +444,26 @@ th.admin-table__actions {
   gap: var(--space-xs);
   font-size: 13px;
   color: var(--color-text);
+}
+
+.admin-table__history-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.admin-table__history-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-accent-600);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 @media (max-width: 768px) {

@@ -96,7 +96,7 @@ function increase(productId: number, currentQuantity: number): void {
   display: grid;
   grid-template-columns: 56px 1fr auto auto auto;
   align-items: center;
-  gap: var(--space-md);
+  gap: 20px;
   padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--color-border);
 }
