@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import apiClient, { AUTH_TOKEN_STORAGE_KEY } from '../api/client'
+import apiClient, { AUTH_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY } from '../api/client'
 
 interface JwtPayload {
   username?: string
@@ -39,14 +39,19 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(email: string, password: string): Promise<void> {
-      const response = await apiClient.post<{ token: string }>('/login', { email, password })
+      const response = await apiClient.post<{ token: string; refresh_token: string }>('/login', {
+        email,
+        password,
+      })
       this.token = response.data.token
       localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, this.token)
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.data.refresh_token)
     },
 
     logout(): void {
       this.token = null
       localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
+      localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
     },
   },
 })

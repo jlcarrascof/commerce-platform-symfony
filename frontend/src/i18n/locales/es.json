@@ -50,6 +50,7 @@
     "loggingIn": "Iniciando sesión...",
     "invalidCredentials": "Email o contraseña inválidos.",
     "tooManyAttempts": "Demasiados intentos de inicio de sesión. Espera un minuto e inténtalo de nuevo.",
+    "sessionExpired": "Tu sesión expiró. Por favor inicia sesión de nuevo.",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña"
   },
