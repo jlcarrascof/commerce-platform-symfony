@@ -11,6 +11,7 @@ export interface Order {
   id: number
   status: OrderStatus
   createdAt: string
+  shippingAddress: string | null
   customer: {
     id: number
     fullName: string

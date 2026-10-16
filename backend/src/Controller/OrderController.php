@@ -54,8 +54,14 @@ class OrderController
             return new JsonResponse(['errors' => [['field' => 'items', 'message' => 'At least one item is required.']]], 422);
         }
 
+        $shippingAddress = $data['shippingAddress'] ?? null;
+        if (null !== $shippingAddress && (!is_string($shippingAddress) || '' === trim($shippingAddress))) {
+            return new JsonResponse(['errors' => [['field' => 'shippingAddress', 'message' => 'Shipping address must be a non-empty string.']]], 422);
+        }
+
         $order = new Order($customer);
         $order->setIdempotencyKey($idempotencyKey);
+        $order->setShippingAddress($shippingAddress);
 
         foreach ($items as $index => $item) {
             $productId = $item['productId'] ?? null;
@@ -267,7 +273,7 @@ class OrderController
     }
 
     /**
-     * @return array{id: ?int, status: string, createdAt: string, customer: array{id: ?int, fullName: string}, items: list<array{productId: ?int, productName: string, quantity: int, unitPriceInCents: int}>}
+     * @return array{id: ?int, status: string, createdAt: string, shippingAddress: ?string, customer: array{id: ?int, fullName: string}, items: list<array{productId: ?int, productName: string, quantity: int, unitPriceInCents: int}>}
      */
     private function serialize(Order $order): array
     {
@@ -293,6 +299,7 @@ class OrderController
             'id' => $order->getId(),
             'status' => $order->getStatus()->value,
             'createdAt' => $order->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            'shippingAddress' => $order->getShippingAddress(),
             'customer' => [
                 'id' => $order->getCustomer()->getId(),
                 'fullName' => $order->getCustomer()->getFullName(),

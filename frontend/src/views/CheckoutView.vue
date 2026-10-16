@@ -4,16 +4,20 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import apiClient from '../api/client'
 import { useCartStore } from '../stores/cart'
+import { useAuthStore } from '../stores/auth'
 import BaseCard from '../components/base/BaseCard.vue'
 import BaseButton from '../components/base/BaseButton.vue'
+import BaseInput from '../components/base/BaseInput.vue'
 
 const { t } = useI18n()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
 const orderId = ref<number | null>(null)
+const shippingAddress = ref('')
 
 // Stable per checkout attempt so a retry after a network error does not create a duplicate order.
 const idempotencyKey = crypto.randomUUID()
@@ -26,6 +30,12 @@ function formatPrice(priceInCents: number): string {
 
 async function placeOrder(): Promise<void> {
   error.value = null
+
+  if ('' === shippingAddress.value.trim()) {
+    error.value = t('checkout.shippingAddressRequired')
+    return
+  }
+
   isSubmitting.value = true
 
   try {
@@ -36,6 +46,7 @@ async function placeOrder(): Promise<void> {
           productId: item.product.id,
           quantity: item.quantity,
         })),
+        shippingAddress: shippingAddress.value.trim(),
       },
       { headers: { 'Idempotency-Key': idempotencyKey } },
     )
@@ -67,6 +78,22 @@ async function placeOrder(): Promise<void> {
       </p>
 
       <template v-else>
+        <section class="checkout-customer">
+          <h2 class="checkout-customer__title">{{ t('checkout.customerInformation') }}</h2>
+          <label class="checkout-customer__field">
+            <span>{{ t('checkout.email') }}</span>
+            <BaseInput :model-value="authStore.userEmail ?? ''" disabled />
+          </label>
+          <label class="checkout-customer__field">
+            <span>{{ t('checkout.shippingAddress') }}</span>
+            <BaseInput
+              v-model="shippingAddress"
+              required
+              :placeholder="t('checkout.shippingAddressPlaceholder')"
+            />
+          </label>
+        </section>
+
         <table class="checkout-table">
           <thead>
             <tr>
@@ -132,6 +159,28 @@ async function placeOrder(): Promise<void> {
 
 .checkout-page__message {
   color: var(--color-text-muted);
+}
+
+.checkout-customer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.checkout-customer__title {
+  font-size: 15px;
+  margin: 0;
+}
+
+.checkout-customer__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 14px;
+  color: var(--color-text-heading);
 }
 
 .checkout-table {
