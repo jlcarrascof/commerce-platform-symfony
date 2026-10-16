@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient, { AUTH_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY } from '../api/client'
+import { useCartStore } from './cart'
 
 interface JwtPayload {
   username?: string
@@ -39,6 +40,10 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(email: string, password: string): Promise<void> {
+      // Discard whatever cart is left in this browser before switching
+      // identities, so a new login never inherits the previous user's cart.
+      useCartStore().clear()
+
       const response = await apiClient.post<{ token: string; refresh_token: string }>('/login', {
         email,
         password,
@@ -52,6 +57,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
       localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
+      useCartStore().clear()
     },
   },
 })
