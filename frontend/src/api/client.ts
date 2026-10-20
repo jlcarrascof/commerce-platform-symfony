@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { TENANT_STORAGE_KEY } from '../composables/useTenant'
 
 export const AUTH_TOKEN_STORAGE_KEY = 'auth_token'
 export const REFRESH_TOKEN_STORAGE_KEY = 'refresh_token'
@@ -11,6 +12,11 @@ apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+
+  const tenantSlug = localStorage.getItem(TENANT_STORAGE_KEY)
+  if (tenantSlug) {
+    config.headers['X-Tenant-Slug'] = tenantSlug
   }
 
   return config
