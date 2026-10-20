@@ -4,6 +4,7 @@ namespace App\Security\Voter;
 
 use App\Entity\Order;
 use App\Entity\User;
+use App\Tenant\TenantContext;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -14,6 +15,10 @@ class OrderVoter extends Voter
 {
     public const CONFIRM = 'ORDER_CONFIRM';
     public const CANCEL = 'ORDER_CANCEL';
+
+    public function __construct(private readonly TenantContext $tenantContext)
+    {
+    }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
@@ -28,12 +33,17 @@ class OrderVoter extends Voter
             return false;
         }
 
+        /** @var Order $order */
+        $order = $subject;
+
+        $currentTenant = $this->tenantContext->getTenant();
+        if (null === $currentTenant || $order->getTenant()->getId() !== $currentTenant->getId()) {
+            return false;
+        }
+
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return true;
         }
-
-        /** @var Order $order */
-        $order = $subject;
 
         return $order->getCustomer()->getUser()->getId() === $user->getId();
     }
