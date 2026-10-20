@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Entity\User;
+use App\Tenant\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class UserController
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly TenantContext $tenantContext,
     ) {
     }
 
@@ -117,7 +119,12 @@ class UserController
         $this->entityManager->persist($user);
 
         if (!$isAdmin) {
-            $customer = new Customer($fullName, $user);
+            $tenant = $this->tenantContext->getTenant();
+            if (null === $tenant) {
+                return new JsonResponse(['error' => 'Missing or invalid X-Tenant-Slug header'], 400);
+            }
+
+            $customer = new Customer($fullName, $user, $tenant);
             $this->entityManager->persist($customer);
         }
 
@@ -170,7 +177,12 @@ class UserController
 
         if (!$isAdmin) {
             if (null === $customer) {
-                $customer = new Customer($fullName ?? '', $user);
+                $tenant = $this->tenantContext->getTenant();
+                if (null === $tenant) {
+                    return new JsonResponse(['error' => 'Missing or invalid X-Tenant-Slug header'], 400);
+                }
+
+                $customer = new Customer($fullName ?? '', $user, $tenant);
                 $this->entityManager->persist($customer);
             } else {
                 $customer->setFullName($fullName ?? $customer->getFullName());

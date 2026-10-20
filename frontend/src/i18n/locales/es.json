@@ -57,7 +57,8 @@
     "tooManyAttempts": "Demasiados intentos de inicio de sesión. Espera un minuto e inténtalo de nuevo.",
     "sessionExpired": "Tu sesión expiró. Por favor inicia sesión de nuevo.",
     "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "hidePassword": "Ocultar contraseña",
+    "company": "Empresa"
   },
   "admin": {
     "orders": "Pedidos",
@@ -87,7 +88,8 @@
     "showing": "Mostrando {from}–{to} de {total}",
     "previous": "Anterior",
     "pageOf": "Página {page} de {total}",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "activeTenant": "Tenant activo"
   },
   "adminCatalog": {
     "title": "Catálogo",

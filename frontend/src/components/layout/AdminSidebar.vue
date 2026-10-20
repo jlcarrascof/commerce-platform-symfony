@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { AVAILABLE_TENANTS, useTenant } from '../../composables/useTenant'
 
 const { t } = useI18n()
 
@@ -8,10 +10,19 @@ const links = [
   { label: () => t('nav.adminCatalog'), to: '/admin/catalog' },
   { label: () => t('nav.adminUsers'), to: '/admin/users' },
 ]
+
+const { tenantSlug } = useTenant()
+const activeTenantLabel = computed(
+  () => AVAILABLE_TENANTS.find((tenant) => tenant.slug === tenantSlug.value)?.label ?? tenantSlug.value,
+)
 </script>
 
 <template>
   <aside class="admin-sidebar">
+    <p class="admin-sidebar__tenant">
+      <span class="admin-sidebar__tenant-label">{{ t('admin.activeTenant') }}</span>
+      <span class="admin-sidebar__tenant-name">{{ activeTenantLabel }}</span>
+    </p>
     <nav class="admin-sidebar__nav">
       <RouterLink
         v-for="link in links"
@@ -38,6 +49,29 @@ const links = [
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+}
+
+.admin-sidebar__tenant {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent-600) 10%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-sidebar__tenant-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.admin-sidebar__tenant-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-accent-text);
 }
 
 .admin-sidebar__link {

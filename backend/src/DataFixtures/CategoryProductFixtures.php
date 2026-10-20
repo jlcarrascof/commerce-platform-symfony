@@ -4,25 +4,34 @@ namespace App\DataFixtures;
 
 use App\Entity\Category;
 use App\Entity\Product;
+use App\Entity\Tenant;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class CategoryProductFixtures extends Fixture
+class CategoryProductFixtures extends Fixture implements DependentFixtureInterface
 {
     public const CATEGORY_ELECTRONICS = 'category-electronics';
     public const CATEGORY_HOME = 'category-home';
     public const CATEGORY_SPORTS = 'category-sports';
     public const CATEGORY_OFFICE = 'category-office';
     public const CATEGORY_TOYS = 'category-toys';
+    public const CATEGORY_GLOBEX_SUPPLIES = 'category-globex-supplies';
 
     public function load(ObjectManager $manager): void
     {
+        /** @var Tenant $acme */
+        $acme = $this->getReference(TenantFixtures::TENANT_ACME, Tenant::class);
+        /** @var Tenant $globex */
+        $globex = $this->getReference(TenantFixtures::TENANT_GLOBEX, Tenant::class);
+
         $categories = [
-            self::CATEGORY_ELECTRONICS => new Category('Electronics', 'electronics'),
-            self::CATEGORY_HOME => new Category('Home & Kitchen', 'home-kitchen'),
-            self::CATEGORY_SPORTS => new Category('Sports & Outdoors', 'sports-outdoors'),
-            self::CATEGORY_OFFICE => new Category('Office Supplies', 'office-supplies'),
-            self::CATEGORY_TOYS => new Category('Toys & Games', 'toys-games'),
+            self::CATEGORY_ELECTRONICS => new Category('Electronics', 'electronics', $acme),
+            self::CATEGORY_HOME => new Category('Home & Kitchen', 'home-kitchen', $acme),
+            self::CATEGORY_SPORTS => new Category('Sports & Outdoors', 'sports-outdoors', $acme),
+            self::CATEGORY_OFFICE => new Category('Office Supplies', 'office-supplies', $acme),
+            self::CATEGORY_TOYS => new Category('Toys & Games', 'toys-games', $acme),
+            self::CATEGORY_GLOBEX_SUPPLIES => new Category('Industrial Supplies', 'industrial-supplies', $globex),
         ];
 
         foreach ($categories as $reference => $category) {
@@ -51,9 +60,14 @@ class CategoryProductFixtures extends Fixture
             ['Building Blocks Set', 'building-blocks-set', '500-piece creative building blocks set.', 2999, 40, self::CATEGORY_TOYS],
             ['Remote Control Car', 'remote-control-car', 'Off-road RC car with rechargeable battery.', 4999, 30, self::CATEGORY_TOYS],
             ['Puzzle 1000 Pieces', 'puzzle-1000-pieces', 'Landscape-themed jigsaw puzzle, 1000 pieces.', 1399, 50, self::CATEGORY_TOYS],
+            ['Industrial Shelving Unit', 'industrial-shelving-unit', 'Heavy-duty steel shelving, 5 levels, 800kg capacity.', 22999, 12, self::CATEGORY_GLOBEX_SUPPLIES],
+            ['Safety Helmet', 'safety-helmet', 'ANSI-certified hard hat with adjustable strap.', 1799, 90, self::CATEGORY_GLOBEX_SUPPLIES],
+            ['Industrial Extension Cord', 'industrial-extension-cord', '15m heavy-duty extension cord, weatherproof.', 3299, 40, self::CATEGORY_GLOBEX_SUPPLIES],
+            ['Pallet Jack', 'pallet-jack', 'Manual hydraulic pallet jack, 2500kg capacity.', 34999, 8, self::CATEGORY_GLOBEX_SUPPLIES],
         ];
 
         foreach ($products as [$name, $slug, $description, $price, $stock, $categoryReference]) {
+            $category = $categories[$categoryReference];
             $product = new Product(
                 $name,
                 $slug,
@@ -61,11 +75,18 @@ class CategoryProductFixtures extends Fixture
                 $price,
                 $stock,
                 \sprintf('https://picsum.photos/seed/%s/400/300', $slug),
-                $categories[$categoryReference],
+                $category,
+                $category->getTenant(),
             );
             $manager->persist($product);
         }
 
         $manager->flush();
+    }
+
+    /** @return array<class-string<Fixture>> */
+    public function getDependencies(): array
+    {
+        return [TenantFixtures::class];
     }
 }

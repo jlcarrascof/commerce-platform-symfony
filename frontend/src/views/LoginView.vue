@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '../stores/auth'
+import { AVAILABLE_TENANTS, useTenant } from '../composables/useTenant'
 import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 
@@ -12,6 +13,8 @@ const email = ref('admin@example.com')
 const password = ref('password123')
 const isSubmitting = ref(false)
 const isPasswordVisible = ref(false)
+
+const { tenantSlug, setTenant } = useTenant()
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -55,6 +58,18 @@ async function handleSubmit(): Promise<void> {
         <h2 class="login-view__form-title">{{ t('login.welcomeBack') }}</h2>
         <p class="login-view__form-subtitle">{{ t('login.subtitle') }}</p>
 
+        <label class="login-view__field">
+          <span>{{ t('login.company') }}</span>
+          <select
+            class="login-view__tenant-select"
+            :value="tenantSlug"
+            @change="setTenant(($event.target as HTMLSelectElement).value)"
+          >
+            <option v-for="tenant in AVAILABLE_TENANTS" :key="tenant.slug" :value="tenant.slug">
+              {{ tenant.label }}
+            </option>
+          </select>
+        </label>
         <label class="login-view__field">
           <span>{{ t('login.email') }}</span>
           <BaseInput v-model="email" type="email" required placeholder="you@example.com">
@@ -153,6 +168,15 @@ async function handleSubmit(): Promise<void> {
   gap: var(--space-xs);
   font-size: 14px;
   color: var(--color-text-heading);
+}
+
+.login-view__tenant-select {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
 }
 
 .login-view__error {

@@ -33,6 +33,11 @@ class OrderFixtures extends Fixture implements DependentFixtureInterface
         $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_1, 'noise-cancelling-headphones', 1, OrderStatus::Confirmed);
         $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_2, 'building-blocks-set', 2, OrderStatus::Pending);
 
+        // Globex Inc orders — separate tenant, separate customers/products, to demonstrate isolation.
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_GLOBEX_1, 'industrial-shelving-unit', 1, OrderStatus::Confirmed);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_GLOBEX_1, 'safety-helmet', 5, OrderStatus::Pending);
+        $this->createOrder($manager, CustomerUserFixtures::CUSTOMER_GLOBEX_2, 'pallet-jack', 1, OrderStatus::Pending);
+
         $manager->flush();
     }
 

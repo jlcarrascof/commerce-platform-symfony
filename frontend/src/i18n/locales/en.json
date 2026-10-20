@@ -57,7 +57,8 @@
     "tooManyAttempts": "Too many login attempts. Please wait a minute and try again.",
     "sessionExpired": "Your session expired. Please log in again.",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "company": "Company"
   },
   "admin": {
     "orders": "Orders",
@@ -87,7 +88,8 @@
     "showing": "Showing {from}–{to} of {total}",
     "previous": "Previous",
     "pageOf": "Page {page} of {total}",
-    "next": "Next"
+    "next": "Next",
+    "activeTenant": "Active tenant"
   },
   "adminCatalog": {
     "title": "Catalog",
