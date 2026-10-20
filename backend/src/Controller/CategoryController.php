@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Category;
+use App\Tenant\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +17,7 @@ class CategoryController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
+        private readonly TenantContext $tenantContext,
     ) {
     }
 
@@ -51,11 +53,17 @@ class CategoryController
     #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request): JsonResponse
     {
+        $tenant = $this->tenantContext->getTenant();
+        if (null === $tenant) {
+            return new JsonResponse(['error' => 'Missing or invalid X-Tenant-Slug header'], 400);
+        }
+
         $data = json_decode($request->getContent(), true) ?? [];
 
         $category = new Category(
             name: (string) ($data['name'] ?? ''),
             slug: (string) ($data['slug'] ?? ''),
+            tenant: $tenant,
         );
 
         $violations = $this->validator->validate($category);

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Category;
 use App\Entity\Product;
+use App\Tenant\TenantContext;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class ProductController
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
         private readonly TagAwareCacheInterface $productsCache,
+        private readonly TenantContext $tenantContext,
     ) {
     }
 
@@ -90,6 +92,11 @@ class ProductController
     #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request): JsonResponse
     {
+        $tenant = $this->tenantContext->getTenant();
+        if (null === $tenant) {
+            return new JsonResponse(['error' => 'Missing or invalid X-Tenant-Slug header'], 400);
+        }
+
         $data = json_decode($request->getContent(), true) ?? [];
 
         $category = isset($data['categoryId'])
@@ -108,6 +115,7 @@ class ProductController
             stock: (int) ($data['stock'] ?? 0),
             imageUrl: (string) ($data['imageUrl'] ?? ''),
             category: $category,
+            tenant: $tenant,
         );
 
         $violations = $this->validator->validate($product);
