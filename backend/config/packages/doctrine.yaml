@@ -30,6 +30,9 @@ doctrine:
             soft_deleteable:
                 class: App\Doctrine\SoftDeleteableFilter
                 enabled: true
+            tenant_filter:
+                class: App\Doctrine\TenantFilter
+                enabled: false
 
 when@test:
     doctrine:
