@@ -33,10 +33,15 @@ class Category
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'category')]
     private Collection $products;
 
-    public function __construct(string $name, string $slug)
+    #[ORM\ManyToOne(targetEntity: Tenant::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private Tenant $tenant;
+
+    public function __construct(string $name, string $slug, Tenant $tenant)
     {
         $this->name = $name;
         $this->slug = $slug;
+        $this->tenant = $tenant;
         $this->products = new ArrayCollection();
     }
 
@@ -69,5 +74,10 @@ class Category
     public function getProducts(): Collection
     {
         return $this->products;
+    }
+
+    public function getTenant(): Tenant
+    {
+        return $this->tenant;
     }
 }

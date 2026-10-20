@@ -48,6 +48,10 @@ class Product
     #[ORM\JoinColumn(nullable: false)]
     private Category $category;
 
+    #[ORM\ManyToOne(targetEntity: Tenant::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private Tenant $tenant;
+
     public function __construct(
         string $name,
         string $slug,
@@ -56,6 +60,7 @@ class Product
         int $stock,
         string $imageUrl,
         Category $category,
+        Tenant $tenant,
     ) {
         $this->name = $name;
         $this->slug = $slug;
@@ -64,6 +69,7 @@ class Product
         $this->stock = $stock;
         $this->imageUrl = $imageUrl;
         $this->category = $category;
+        $this->tenant = $tenant;
     }
 
     public function getId(): ?int
@@ -139,5 +145,10 @@ class Product
     public function setCategory(Category $category): void
     {
         $this->category = $category;
+    }
+
+    public function getTenant(): Tenant
+    {
+        return $this->tenant;
     }
 }

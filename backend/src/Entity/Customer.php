@@ -28,10 +28,15 @@ class Customer
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'customer')]
     private Collection $orders;
 
-    public function __construct(string $fullName, User $user)
+    #[ORM\ManyToOne(targetEntity: Tenant::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private Tenant $tenant;
+
+    public function __construct(string $fullName, User $user, Tenant $tenant)
     {
         $this->fullName = $fullName;
         $this->user = $user;
+        $this->tenant = $tenant;
         $this->orders = new ArrayCollection();
     }
 
@@ -59,5 +64,10 @@ class Customer
     public function getOrders(): Collection
     {
         return $this->orders;
+    }
+
+    public function getTenant(): Tenant
+    {
+        return $this->tenant;
     }
 }

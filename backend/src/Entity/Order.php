@@ -42,9 +42,14 @@ class Order
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'order', cascade: ['persist'], orphanRemoval: true)]
     private Collection $items;
 
+    #[ORM\ManyToOne(targetEntity: Tenant::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private Tenant $tenant;
+
     public function __construct(Customer $customer)
     {
         $this->customer = $customer;
+        $this->tenant = $customer->getTenant();
         $this->status = OrderStatus::Pending;
         $this->createdAt = new \DateTimeImmutable();
         $this->items = new ArrayCollection();
@@ -106,5 +111,10 @@ class Order
         if (!$this->items->contains($item)) {
             $this->items->add($item);
         }
+    }
+
+    public function getTenant(): Tenant
+    {
+        return $this->tenant;
     }
 }
