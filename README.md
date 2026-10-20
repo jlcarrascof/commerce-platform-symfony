@@ -88,9 +88,13 @@ This was not actually implemented or tested against a running SQL Server instanc
 - **Psalm**: omitted; PHPStan alone covers static analysis for this project's purposes.
 - **GitLab CI**: the original plan assumed GitLab; this repo lives on GitHub, so GitHub Actions is used instead.
 - **SQL Server**: documented above, not implemented against a live instance.
-- **i18n (ES/EN) and a manual dark/light theme toggle**: the color system already respects the OS/browser's `prefers-color-scheme`, but a manual in-app toggle and translated UI text were not built — flagged as a scope decision that needs explicit direction (persistence, auto-detection, i18n library) rather than being implemented speculatively.
 - **TypeScript client generation from OpenAPI**: not built; the frontend's API types are hand-written and kept in sync manually.
 - **Hosting a live demo** (Railway/Render/etc.): not done; the repo + Docker + CI are the deliverable.
+
+## i18n and theme
+
+- **i18n**: `vue-i18n`, with `en`/`es` message catalogs (`frontend/src/i18n/locales/`). Locale is detected from the browser (`navigator.language`) on first load, then persisted to `localStorage` (`locale` key) once the user switches it explicitly.
+- **Dark/light mode**: a manual toggle (`useTheme.ts` composable, module-scoped singleton shared across all components) backed by `localStorage` (`theme` key), falling back to `prefers-color-scheme` only when nothing is stored yet.
 
 ## Project history
 
@@ -106,3 +110,5 @@ Built incrementally across 10 checkpoints, each merged as its own reviewed pull 
 7. Async order-confirmation email via Symfony Messenger
 8. Redis-backed catalog caching
 9. CI/CD pipeline, real DB-connectivity health check, this README
+
+Additional UI polish pass merged after the 10 original checkpoints: product card hover elevation, a persistent admin sidebar, a 3-column master-detail layout for admin orders (list, detail, audit trail with avatars), and the cart replaced by a floating drawer instead of a dedicated `/cart` page.
