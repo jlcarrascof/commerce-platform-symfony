@@ -8,6 +8,7 @@ use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Entity\OrderStatus;
 use App\Entity\Product;
+use App\Entity\Tenant;
 use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
@@ -141,12 +142,13 @@ class OrderTest extends TestCase
     {
         $user = new User('customer@example.com', 'hashed-password');
 
-        return new Customer('Test Customer', $user);
+        return new Customer('Test Customer', $user, $this->makeTenant());
     }
 
     private function makeProduct(int $stock, int $priceInCents): Product
     {
-        $category = new Category('Test Category', 'test-category');
+        $tenant = $this->makeTenant();
+        $category = new Category('Test Category', 'test-category', $tenant);
 
         return new Product(
             name: 'Test Product',
@@ -156,6 +158,12 @@ class OrderTest extends TestCase
             stock: $stock,
             imageUrl: 'https://example.com/image.png',
             category: $category,
+            tenant: $tenant,
         );
+    }
+
+    private function makeTenant(): Tenant
+    {
+        return new Tenant('Test Tenant', 'test-tenant');
     }
 }
